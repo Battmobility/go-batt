@@ -1,0 +1,85 @@
+{
+	"availabilityEventsPerVehicleDtos": {
+	  "2EXL799": {
+		"availabilities": [
+		  {
+			"id": "364cfff0-944b-478c-9bdf-ca3fda179a41",
+			"vehicleId": "2EXL799",
+			"vehicle": {
+			  "id": "2EXL799",
+			  "name": "VW ID.5 Gezusters Lovelingstraat",
+			  "licensePlate": "2EXL799",
+			  "imageUrl": "/web-api/booking/v1/vehicle/image/a7c7ada9-202e-4149-889c-c626490c830b"
+			},
+			"period": {
+			  "start": "2024-05-09T00:00:00+02:00[Europe/Brussels]",
+			  "end": "2024-05-31T23:59:00+02:00[Europe/Brussels]",
+			  "timeZone": "BRUSSELS"
+			},
+			"recurringAvailabilityId": null,
+			"type": "AVAILABLE"
+		  }
+		],
+		"nonAvailabilities": [
+		  {
+			"vehicleId": "2EXL799",
+			"type": "BOOKING",
+			"type2": "BOOKING",
+			"period": {
+			  "start": "2024-05-16T07:00:00+02:00[Europe/Brussels]",
+			  "end": "2024-05-16T20:00:00+02:00[Europe/Brussels]",
+			  "timeZone": "BRUSSELS"
+			},
+			"booking": {
+			  "id": "59a205c1-ab28-48e7-8c45-fb8e5d1a4646",
+			  "user": {
+				"remoteId": "b79f9efb-9f67-4367-8819-b0a58bb4b438",
+				"userName": null,
+				"imageUrl": "/web-api/user/v1/image/fb2ef43c-c3dc-4851-a7c6-d55d79cfd738",
+				"displayName": "Stijn Lamens"
+			  },
+			  "comments": "",
+			  "status": "ACTIVE",
+			  "overdue": false,
+			  "vehicle": {
+				"id": "2EXL799",
+				"name": "VW ID.5 Gezusters Lovelingstraat",
+				"licensePlate": "2EXL799",
+				"imageUrl": "/web-api/booking/v1/vehicle/image/a7c7ada9-202e-4149-889c-c626490c830b"
+			  },
+			  "plannedPeriod": {
+				"start": "2024-05-16T07:00:00+02:00[Europe/Brussels]",
+				"end": "2024-05-16T20:00:00+02:00[Europe/Brussels]",
+				"timeZone": "BRUSSELS"
+			  },
+			  "usagePeriod": {
+				"start": "2024-05-16T08:15:52.055859+02:00[Europe/Brussels]",
+				"end": null,
+				"timeZone": "BRUSSELS"
+			  },
+			  "userId": "b79f9efb-9f67-4367-8819-b0a58bb4b438",
+			  "activatedDate": "2024-05-16T08:15:52.055859+02:00[Europe/Brussels]",
+			  "originalEndDate": "2024-05-16T20:00:00+02:00[Europe/Brussels]",
+			  "userName": null,
+			  "userImageUrl": "/web-api/user/v1/image/fb2ef43c-c3dc-4851-a7c6-d55d79cfd738",
+			  "userDisplayName": "Stijn Lamens"
+			},
+			"plannedPeriod": {
+			  "start": "2024-05-16T07:00:00+02:00[Europe/Brussels]",
+			  "end": "2024-05-16T20:00:00+02:00[Europe/Brussels]",
+			  "timeZone": "BRUSSELS"
+			},
+			"usagePeriod": {
+			  "start": "2024-05-16T08:15:52.055859+02:00[Europe/Brussels]",
+			  "end": null,
+			  "timeZone": "BRUSSELS"
+			},
+			"availability": null,
+			"overdue": false
+		  }
+		],
+		"currentUsageStart": null,
+		"currentUsageOverdue": false
+	  }
+	}
+}
