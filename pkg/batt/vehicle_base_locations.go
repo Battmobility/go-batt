@@ -45,6 +45,10 @@ type VehicleBaseLocation struct {
 	ID           string      `json:"id,omitempty"`
 	Name         string      `json:"name"`
 	HomePosition GpsLocation `json:"homePosition"`
+	Borough      string      `json:"borough"`
+	Status       string      `json:"status"`
+	Memo         string      `json:"memo"`
+	ADType       string      `json:"adType"`
 }
 
 type UpdateVehicleRequest struct {
