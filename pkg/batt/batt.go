@@ -18,7 +18,8 @@ const (
 )
 
 type BattClient struct {
-	SofBattHost    string
+	SofBattBaseUrl string
+	AuthBaseUrl    string
 	BackOfficeHost string
 	ApiEndpoint    string
 	Token          *string
@@ -28,11 +29,12 @@ type BattClient struct {
 
 const layout = "2006-01-02T15:04:05-07:00[Europe/Brussels]"
 
-func NewBattClient(base, username, password string) (result *BattClient) {
+func NewBattClient(base, auth, username, password string) (result *BattClient) {
 	return &BattClient{
-		SofBattHost: base,
-		Username:    username,
-		Password:    password,
+		SofBattBaseUrl: base,
+		AuthBaseUrl:    auth,
+		Username:       username,
+		Password:       password,
 	}
 }
 
@@ -45,7 +47,7 @@ func (c *BattClient) refreshToken() error {
 	data.Set("grant_type", "password")
 
 	endpoint := "/auth/realms/Battmobiel/protocol/openid-connect/token"
-	url := fmt.Sprintf("%s%s", c.SofBattHost, endpoint)
+	url := fmt.Sprintf("%s%s", c.AuthBaseUrl, endpoint)
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data.Encode()))
 	if err != nil {
 		return err
@@ -78,7 +80,7 @@ func (c *BattClient) SearchAvailabilities(start, end *time.Time, vehicleIds []st
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.request(http.MethodPost, c.SofBattHost, "/api/web-bff-service/v1/availability/v1/availability-events", jsonData)
+	resp, err := c.request(http.MethodPost, c.SofBattBaseUrl, "availability/v1/availability-events", jsonData)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +110,7 @@ func (c *BattClient) SearchBookings(start, end *time.Time) (res *SearchBookingRe
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.request(http.MethodPost, c.SofBattHost, "/api/web-bff-service/v1/booking/v1/bookings/searches", jsonData)
+	resp, err := c.request(http.MethodPost, c.SofBattBaseUrl, "booking/v1/bookings/searches", jsonData)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +131,7 @@ func (c *BattClient) SearchBookings(start, end *time.Time) (res *SearchBookingRe
 }
 
 func (c *BattClient) GetBatteryStatus(id string) (res *BatteryStatus, err error) {
-	resp, err := c.request(http.MethodGet, c.SofBattHost, fmt.Sprintf("/api/web-bff-service/v1/telematics/v1/batteryStatus/%s", id), nil)
+	resp, err := c.request(http.MethodGet, c.SofBattBaseUrl, fmt.Sprintf("telematics/v1/batteryStatus/%s", id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +141,7 @@ func (c *BattClient) GetBatteryStatus(id string) (res *BatteryStatus, err error)
 }
 
 func (c *BattClient) RefreshLocation(id string) (res *GpsLocation, err error) {
-	resp, err := c.request(http.MethodPost, c.SofBattHost, fmt.Sprintf("/api/web-bff-service/v1/telematics/v1/location/%s", id), nil)
+	resp, err := c.request(http.MethodPost, c.SofBattBaseUrl, fmt.Sprintf("telematics/v1/location/%s", id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +155,7 @@ func (c *BattClient) SearchVehicles(req *SearchVehicleRequest) (res *SearchVehic
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.request(http.MethodPost, c.SofBattHost, "/api/web-bff-service/v1/booking/v1/vehicles/searches", jsonData)
+	resp, err := c.request(http.MethodPost, c.SofBattBaseUrl, "booking/v1/vehicles/searches", jsonData)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +168,7 @@ func (c *BattClient) SearchVehicles(req *SearchVehicleRequest) (res *SearchVehic
 }
 
 func (c *BattClient) GetVehicle(vehicleId string) (res *Vehicle, err error) {
-	resp, err := c.request(http.MethodGet, c.SofBattHost, fmt.Sprintf("/api/web-bff-service/v1/booking/v1/vehicles/%s", vehicleId), nil)
+	resp, err := c.request(http.MethodGet, c.SofBattBaseUrl, fmt.Sprintf("booking/v1/vehicles/%s", vehicleId), nil)
 	if err != nil {
 		return nil, err
 	}
