@@ -16,8 +16,8 @@ func TestKeycloakValidator(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = kv.checkHeader(stagingHeader)
+	err = kv.checkHeader(stagingHeader, false)
 	fmt.Println(err)
-	err = kv.checkHeader(bogus)
+	err = kv.checkHeader(bogus, false)
 	fmt.Println(err)
 }

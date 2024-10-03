@@ -13,6 +13,10 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
+const (
+	BattAdminRole = "BattAdmin"
+)
+
 // KeycloakCertsResponse is the structure of the response from the Keycloak certs endpoint
 type KeycloakCertsResponse struct {
 	Keys []struct {
@@ -89,8 +93,22 @@ func (kv *KeycloakValidator) validateToken(token *jwt.Token) (res interface{}, e
 	return kv.pk, nil
 }
 
-func (kv *KeycloakValidator) checkHeader(header string) (err error) {
-	_, err = jwt.Parse(header, kv.validateToken)
+func (kv *KeycloakValidator) checkHeader(header string, battAdmin bool) (err error) {
+	tok, err := jwt.Parse(header, kv.validateToken)
+	//extract the roles from realm_access
+	if battAdmin {
+		roles, ok := tok.Claims.(jwt.MapClaims)["realm_access"].(map[string]interface{})["roles"].([]string)
+		if !ok {
+			return fmt.Errorf("no roles found in token")
+		}
+		for _, role := range roles {
+			if role == BattAdminRole {
+				return nil
+			}
+		}
+		return fmt.Errorf("no batt_admin role found in token")
+	}
+
 	return err
 }
 
@@ -98,7 +116,21 @@ func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		header = strings.TrimPrefix(header, "Bearer ")
-		err := kv.checkHeader(header)
+		err := kv.checkHeader(header, false)
+		if err != nil {
+			fmt.Println("Error parsing jwt token", err)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (kv *KeycloakValidator) AdminMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		header := r.Header.Get("Authorization")
+		header = strings.TrimPrefix(header, "Bearer ")
+		err := kv.checkHeader(header, true)
 		if err != nil {
 			fmt.Println("Error parsing jwt token", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
