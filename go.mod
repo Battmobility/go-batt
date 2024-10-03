@@ -2,7 +2,10 @@ module github.com/battmobility/go-batt
 
 go 1.21.4
 
-require github.com/stretchr/testify v1.9.0
+require (
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/stretchr/testify v1.9.0
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
