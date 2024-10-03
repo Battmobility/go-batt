@@ -97,12 +97,9 @@ func (kv *KeycloakValidator) checkHeader(header string, battAdmin bool) (err err
 	tok, err := jwt.Parse(header, kv.validateToken)
 	//extract the roles from realm_access
 	if battAdmin {
-		roles, ok := tok.Claims.(jwt.MapClaims)["realm_access"].(map[string]interface{})["roles"].([]string)
-		if !ok {
-			return fmt.Errorf("no roles found in token")
-		}
+		roles := tok.Claims.(jwt.MapClaims)["realm_access"].(map[string]interface{})["roles"].([]interface{})
 		for _, role := range roles {
-			if role == BattAdminRole {
+			if role.(string) == BattAdminRole {
 				return nil
 			}
 		}
