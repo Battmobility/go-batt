@@ -15,12 +15,13 @@ type Period struct {
 }
 
 type SearchVehicleRequest struct {
-	Period         *Period         `json:"period,omitempty"`
+	Period         *Period        `json:"period,omitempty"`
 	FilterCriteria FilterCriteria `json:"filterCriteria"`
 }
 type FilterCriteria struct{}
 type SearchBookingRequest struct {
 	Period Period `json:"period"`
+	Status string `json:"status"`
 }
 type SearchAvailabilityRequest struct {
 	Period     Period   `json:"period"`
