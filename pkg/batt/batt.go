@@ -99,14 +99,8 @@ func (c *BattClient) SearchAvailabilities(start, end *time.Time, vehicleIds []st
 	return res, err
 }
 
-func (c *BattClient) SearchBookings(start, end *time.Time) (res *SearchBookingResponse, err error) {
-	requestBody := SearchBookingRequest{
-		Period: Period{
-			Start: start,
-			End:   end,
-		},
-	}
-	jsonData, err := json.Marshal(requestBody)
+func (c *BattClient) SearchBookings(request SearchBookingRequest) (res *SearchBookingResponse, err error) {
+	jsonData, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
