@@ -20,8 +20,8 @@ type SearchVehicleRequest struct {
 }
 type FilterCriteria struct{}
 type SearchBookingRequest struct {
-	Period Period `json:"period"`
-	Status string `json:"status"`
+	Period   Period   `json:"period"`
+	Statuses []string `json:"statuses"`
 }
 type SearchAvailabilityRequest struct {
 	Period     Period   `json:"period"`
