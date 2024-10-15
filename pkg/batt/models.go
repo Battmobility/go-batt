@@ -409,3 +409,18 @@ type BackOfficeUser struct {
 	SofBattRemoteID    string `json:"sofBattRemoteId"`
 	SofBattDisplayName string `json:"-"`
 }
+
+type Issue struct {
+	Booking       *Booking         `json:"booking"`
+	Vehicle       *Vehicle         `json:"vehicle"`
+	Nav           *NonAvailability `json:"nav"`
+	PrevUser      *BackOfficeUser  `json:"prev_user"`
+	NextUser      *BackOfficeUser  `json:"next_user"`
+	BatteryStatus *BatteryStatus   `json:"battery_status"`
+	Location      *GpsLocation     `json:"location"`
+	BatteryError  error            `json:"battery_error"`
+	LocationError error            `json:"location_error"`
+	Distance      float64          `json:"distance"`
+	Reason        string           `json:"reason"`
+	IssueType     string           `json:"issue_type"`
+}
