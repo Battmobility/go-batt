@@ -29,9 +29,10 @@ type BattClient struct {
 
 const layout = "2006-01-02T15:04:05-07:00[Europe/Brussels]"
 
-func NewBattClient(base, auth, username, password string) (result *BattClient) {
+func NewBattClient(base, backoffice, auth, username, password string) (result *BattClient) {
 	return &BattClient{
 		SofBattBaseUrl: base,
+		BackOfficeHost: backoffice,
 		AuthBaseUrl:    auth,
 		Username:       username,
 		Password:       password,

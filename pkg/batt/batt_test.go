@@ -10,14 +10,14 @@ import (
 )
 
 func TestSearchVehicles(t *testing.T) {
-	battClient := NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
+	battClient := NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "", "https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
 	veh, err := battClient.SearchVehicles(&SearchVehicleRequest{})
 	fmt.Print(err)
 	fmt.Println(veh.Vehicles)
 }
 
 func TestCreateVBL(t *testing.T) {
-	bc := NewBattClient("https://booking-staging.battmobility.be/web-api/", "https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
+	bc := NewBattClient("https://booking-staging.battmobility.be/web-api/", "", "https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
 	vbl, err := bc.CreateVehicleBaseLocation(VehicleBaseLocation{
 		Name: "hoi",
 		HomePosition: GpsLocation{
@@ -36,7 +36,7 @@ func TestCreateVBL(t *testing.T) {
 }
 
 func TestAddVBLToVehicle(t *testing.T) {
-	bc := NewBattClient("https://booking-staging.battmobility.be/web-api/", "https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
+	bc := NewBattClient("https://booking-staging.battmobility.be/web-api/", "", "https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
 	veh, err := bc.UpdateVehicleLocation(UpdateVehicleRequest{
 		VehicleId: "1THX384",
 		AddVehicleLocationRequest: AddVehicleLocationRequest{
