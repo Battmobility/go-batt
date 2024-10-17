@@ -424,8 +424,8 @@ type Issue struct {
 	NextUser      *BackOfficeUser  `json:"next_user"`
 	BatteryStatus *BatteryStatus   `json:"battery_status"`
 	Location      *GpsLocation     `json:"location"`
-	BatteryError  error            `json:"battery_error"`
-	LocationError error            `json:"location_error"`
+	BatteryError  string           `json:"battery_error"`
+	LocationError string           `json:"location_error"`
 	Distance      float64          `json:"distance"`
 	Reason        string           `json:"reason"`
 	IssueType     string           `json:"issue_type"`
