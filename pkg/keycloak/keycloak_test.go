@@ -16,10 +16,11 @@ func TestKeycloakValidator(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = kv.checkHeader(stagingHeader, false)
+	sub, err := kv.ParseToken(stagingHeader)
+	fmt.Println(sub)
 	fmt.Println(err)
-	err = kv.checkHeader(stagingHeader, true)
+	_, err = kv.ParseToken(stagingHeader)
 	fmt.Println(err)
-	err = kv.checkHeader(bogus, false)
+	_, err = kv.ParseToken(bogus)
 	fmt.Println(err)
 }

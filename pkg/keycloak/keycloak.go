@@ -17,6 +17,12 @@ const (
 	BattAdminRole = "BattAdmin"
 )
 
+type Claims struct {
+	Sub   string   `json:"sub"`
+	Name  string   `json:"name"`
+	Roles []string `json:"roles"`
+}
+
 // KeycloakCertsResponse is the structure of the response from the Keycloak certs endpoint
 type KeycloakCertsResponse struct {
 	Keys []struct {
@@ -93,27 +99,25 @@ func (kv *KeycloakValidator) validateToken(token *jwt.Token) (res interface{}, e
 	return kv.pk, nil
 }
 
-func (kv *KeycloakValidator) checkHeader(header string, battAdmin bool) (err error) {
-	tok, err := jwt.Parse(header, kv.validateToken)
+func (kv *KeycloakValidator) ParseToken(header string) (result *Claims, err error) {
+	claims := jwt.MapClaims{}
+	_, err = jwt.ParseWithClaims(header, claims, kv.validateToken)
 	//extract the roles from realm_access
-	if battAdmin {
-		roles := tok.Claims.(jwt.MapClaims)["realm_access"].(map[string]interface{})["roles"].([]interface{})
-		for _, role := range roles {
-			if role.(string) == BattAdminRole {
-				return nil
-			}
-		}
-		return fmt.Errorf("no batt_admin role found in token")
+	if err != nil {
+		return nil, err
 	}
-
-	return err
+	return &Claims{
+		Name:  claims["name"].(string),
+		Sub:   claims["sub"].(string),
+		Roles: strings.Split(claims["realm_access"].(map[string]interface{})["roles"].([]interface{})[0].(string), ","),
+	}, nil
 }
 
 func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		header = strings.TrimPrefix(header, "Bearer ")
-		err := kv.checkHeader(header, false)
+		_, err := kv.ParseToken(header)
 		if err != nil {
 			fmt.Println("Error parsing jwt token", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -127,12 +131,21 @@ func (kv *KeycloakValidator) AdminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		header = strings.TrimPrefix(header, "Bearer ")
-		err := kv.checkHeader(header, true)
-		if err != nil {
+		parsed, err := kv.ParseToken(header)
+		if err != nil || !contains(parsed.Roles, BattAdminRole) {
 			fmt.Println("Error parsing jwt token", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func contains(s []string, search string) bool {
+	for _, v := range s {
+		if v == search {
+			return true
+		}
+	}
+	return false
 }
