@@ -47,3 +47,20 @@ func TestAddVBLToVehicle(t *testing.T) {
 	assert.NoError(t, err)
 	fmt.Println(veh)
 }
+
+func TestGetVehicleGroup(t *testing.T) {
+	bc := NewBattClient("https://booking-staging.battmobility.be/web-api/", "", "https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
+	vg, err := bc.GetVehicleGroup("batt-all")
+	assert.NoError(t, err)
+	fmt.Println(vg)
+}
+
+func TestCreateIssue(t *testing.T) {
+	bc := NewBattClient("https://booking-staging.battmobility.be/web-api/", "", "https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
+	issue, err := bc.CreateIssue(CreateIssueRequest{
+		Title:     "hoi",
+		VehicleId: "2ATZ899",
+	})
+	assert.NoError(t, err)
+	fmt.Println(issue)
+}
