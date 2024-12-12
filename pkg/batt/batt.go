@@ -174,6 +174,35 @@ func (c *BattClient) GetVehicle(vehicleId string) (res *Vehicle, err error) {
 	}
 	return result, nil
 }
+func (c *BattClient) GetVehicleGroup(id string) (res *VehicleGroup, err error) {
+	resp, err := c.request(http.MethodGet, c.SofBattBaseUrl, fmt.Sprintf("vehicle-group/v1/vehicle-groups/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	result := &VehicleGroup{}
+	err = json.NewDecoder(resp).Decode(result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (c *BattClient) CreateIssue(req CreateIssueRequest) (res *Issue, err error) {
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.request(http.MethodPost, c.SofBattBaseUrl, "issue/v1/issues", jsonData)
+	if err != nil {
+		return nil, err
+	}
+	result := &Issue{}
+	err = json.NewDecoder(resp).Decode(result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
 
 func (c *BattClient) SearchBackOfficeUser(remoteId string) (res *BackOfficeUser, err error) {
 	req := SearchBackOfficeUsersRequest{

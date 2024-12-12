@@ -416,6 +416,11 @@ type BackOfficeUser struct {
 	SofBattDisplayName string `json:"-"`
 }
 
+type CreateIssueRequest struct {
+	VehicleId          string `json:"vehicleId"`
+	AssignedToRemoteId string `json:"assignedToRemoteId"`
+	Title              string `json:"title"`
+}
 type Issue struct {
 	Booking       *Booking         `json:"booking"`
 	Vehicle       *Vehicle         `json:"vehicle"`
@@ -429,4 +434,10 @@ type Issue struct {
 	Distance      float64          `json:"distance"`
 	Reason        string           `json:"reason"`
 	IssueType     string           `json:"issue_type"`
+}
+
+type VehicleGroup struct {
+	ID       string    `json:"id"`
+	Name     string    `json:"name"`
+	Vehicles []Vehicle `json:"vehicles"`
 }
