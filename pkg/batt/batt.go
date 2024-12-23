@@ -204,6 +204,23 @@ func (c *BattClient) CreateIssue(req CreateIssueRequest) (res *Issue, err error)
 	return result, nil
 }
 
+func (c *BattClient) SearchIssues(req SearchIssueRequest) (res *IssueResponse, err error) {
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.request(http.MethodPost, c.SofBattBaseUrl, "issue/v1/issues/searches", jsonData)
+	if err != nil {
+		return nil, err
+	}
+	result := &IssueResponse{}
+	err = json.NewDecoder(resp).Decode(result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (c *BattClient) SearchBackOfficeUser(remoteId string) (res *BackOfficeUser, err error) {
 	req := SearchBackOfficeUsersRequest{
 		SofBattRemoteId: strings.ToUpper(remoteId),

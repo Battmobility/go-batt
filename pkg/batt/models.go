@@ -436,6 +436,48 @@ type Issue struct {
 	IssueType     string           `json:"issue_type"`
 }
 
+type IssueResponse struct {
+	Issues []Issue `json:"issues"`
+}
+
+/*
+implement searchissuerequest, here is the java code
+public class SearchIssuesRequest {
+
+	public enum SortOrder {asc, desc}
+
+	public String vehicleId;
+	public String bookingId;
+	public String userRemoteId;
+
+	public String title;
+
+	public List<IssuePriority> priorities;
+	public List<IssueStatus> statuses;
+
+	public String assignedToRemoteId;
+	public Integer number;
+
+	public ZonedDateTime createdAfter;
+	public ZonedDateTime updatedAfter;
+
+	public String sort;
+	public SortOrder order;
+
+	public Integer offset;
+	public Integer max;
+
+}
+*/
+type SearchIssueRequest struct {
+	VehicleId          string   `json:"vehicleId"`
+	BookingId          string   `json:"bookingId"`
+	UserRemoteId       string   `json:"userRemoteId"`
+	AssignedToRemoteId string   `json:"assignedToRemoteId"`
+	Title              string   `json:"title"`
+	Statuses           []string `json:"statuses"`
+}
+
 type VehicleGroup struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
