@@ -3,16 +3,19 @@ package batt
 import "time"
 
 const (
-	BATTERYSTATUS_NOT_CHARGING  = "NOT_CHARGING"
-	BATTERYSTATUS_NORMAL_CHARGE = "NORMAL_CHARGE"
-	BATTERYSTATUS_QUICK_CHARGE  = "QUICK_CHARGE"
-	BATTERYSTATUS_UNKNOWN       = "UNKNOWN"
-	ISSUETYPE_POST_BOOKING      = "POST_BOOKING"
-	ISSUETYPE_PRE_BOOKING       = "PRE_BOOKING"
-	ISSUETYPE_FLEET             = "FLEET"
-	ISSUEREASON_BATTERY         = "BATTERY"
-	ISSUEREASON_LOCATION        = "LOCATION"
-	ISSUEREASON_CLOSE_NAV       = "CLOSE_NAV"
+	BATTERYSTATUS_NOT_CHARGING       = "NOT_CHARGING"
+	BATTERYSTATUS_NORMAL_CHARGE      = "NORMAL_CHARGE"
+	BATTERYSTATUS_QUICK_CHARGE       = "QUICK_CHARGE"
+	BATTERYSTATUS_UNKNOWN            = "UNKNOWN"
+	ISSUETYPE_POST_BOOKING           = "POST_BOOKING"
+	ISSUETYPE_PRE_BOOKING            = "PRE_BOOKING"
+	ISSUETYPE_FLEET                  = "FLEET"
+	ISSUEREASON_BATTERY              = "BATTERY"
+	ISSUEREASON_LOCATION             = "LOCATION"
+	ISSUEREASON_CLOSE_NAV            = "CLOSE_NAV"
+	TELEMATICSPROVIDER_FLESPI        = "FLESPI"
+	TELEMATICSPROVIDER_FLESPI_TWILIO = "FLESPI_TWILIO"
+	TELEMATICSPROVIDER_INVERS        = "INVERS"
 )
 
 type Period struct {
@@ -26,8 +29,9 @@ type SearchVehicleRequest struct {
 }
 type FilterCriteria struct{}
 type SearchBookingRequest struct {
-	Period   Period   `json:"period"`
-	Statuses []string `json:"statuses"`
+	Period          Period   `json:"period"`
+	Statuses        []string `json:"statuses"`
+	NeedsCorrection *bool    `json:"needsCorrection,omitempty"`
 }
 type SearchAvailabilityRequest struct {
 	Period     Period   `json:"period"`
@@ -440,35 +444,6 @@ type IssueResponse struct {
 	Issues []Issue `json:"issues"`
 }
 
-/*
-implement searchissuerequest, here is the java code
-public class SearchIssuesRequest {
-
-	public enum SortOrder {asc, desc}
-
-	public String vehicleId;
-	public String bookingId;
-	public String userRemoteId;
-
-	public String title;
-
-	public List<IssuePriority> priorities;
-	public List<IssueStatus> statuses;
-
-	public String assignedToRemoteId;
-	public Integer number;
-
-	public ZonedDateTime createdAfter;
-	public ZonedDateTime updatedAfter;
-
-	public String sort;
-	public SortOrder order;
-
-	public Integer offset;
-	public Integer max;
-
-}
-*/
 type SearchIssueRequest struct {
 	VehicleId          string   `json:"vehicleId"`
 	BookingId          string   `json:"bookingId"`
@@ -482,4 +457,17 @@ type VehicleGroup struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
 	Vehicles []Vehicle `json:"vehicles"`
+}
+
+type VehicleTelematics struct {
+	VehicleID        string `json:"vehicleId"`
+	ProviderDeviceId string `json:"providerDeviceId"`
+	ProviderId       string `json:"providerId"`
+	PhoneNumber      string `json:"phoneNumber"`
+	MaxRange         int    `json:"maxRange"`
+}
+
+type UpdateBookingRequest struct {
+	CorrectedKm     *int  `json:"correctedKm,omitempty"`
+	NeedsCorrection *bool `json:"needsCorrection,omitempty"`
 }

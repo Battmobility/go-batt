@@ -204,6 +204,19 @@ func (c *BattClient) CreateIssue(req CreateIssueRequest) (res *Issue, err error)
 	return result, nil
 }
 
+func (c *BattClient) GetVehicleTelematics(id string) (res *VehicleTelematics, err error) {
+	resp, err := c.request(http.MethodGet, c.SofBattBaseUrl, fmt.Sprintf("telematics/v1/devices/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	result := &VehicleTelematics{}
+	err = json.NewDecoder(resp).Decode(result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (c *BattClient) SearchIssues(req SearchIssueRequest) (res *IssueResponse, err error) {
 	jsonData, err := json.Marshal(req)
 	if err != nil {
@@ -219,6 +232,19 @@ func (c *BattClient) SearchIssues(req SearchIssueRequest) (res *IssueResponse, e
 		return nil, err
 	}
 	return result, nil
+}
+func (c *BattClient) UpdateBooking(req UpdateBookingRequest, id string) (res *Booking, err error) {
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.request(http.MethodPut, c.SofBattBaseUrl, fmt.Sprintf("booking/v1/bookings/%s", id), jsonData)
+	if err != nil {
+		return nil, err
+	}
+	result := &Booking{}
+	err = json.NewDecoder(resp).Decode(result)
+	return result, err
 }
 
 func (c *BattClient) SearchBackOfficeUser(remoteId string) (res *BackOfficeUser, err error) {
