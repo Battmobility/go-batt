@@ -122,7 +122,7 @@ func (kv *KeycloakValidator) ParseToken(header string) (result *Claims, err erro
 
 type contextKey string
 
-const subKey contextKey = "sub"
+const SubKey contextKey = "sub"
 
 func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +138,7 @@ func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		ctx := context.WithValue(r.Context(), subKey, claims.Sub)
+		ctx := context.WithValue(r.Context(), SubKey, claims.Sub)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
