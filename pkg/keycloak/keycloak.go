@@ -42,7 +42,7 @@ type KeycloakValidator struct {
 }
 
 type Config struct {
-	passThroughUnAuthenticated bool
+	PassUnauthenticated bool
 }
 
 func NewKeycloakValidator(url string, cfg Config) (res *KeycloakValidator, err error) {
@@ -128,7 +128,7 @@ func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		header = strings.TrimPrefix(header, "Bearer ")
-		if header == "" && kv.cfg.passThroughUnAuthenticated {
+		if header == "" && kv.cfg.PassUnauthenticated {
 			next.ServeHTTP(w, r)
 			return
 		}
