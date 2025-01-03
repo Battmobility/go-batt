@@ -12,7 +12,7 @@ const (
 )
 
 func TestKeycloakValidator(t *testing.T) {
-	kv, err := NewKeycloakValidator(stagingHost)
+	kv, err := NewKeycloakValidator(stagingHost, Config{})
 	if err != nil {
 		t.Fatal(err)
 	}

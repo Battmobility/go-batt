@@ -1,6 +1,7 @@
 package keycloak
 
 import (
+	"context"
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
@@ -36,16 +37,22 @@ type KeycloakCertsResponse struct {
 }
 
 type KeycloakValidator struct {
-	pk *rsa.PublicKey
+	pk  *rsa.PublicKey
+	cfg Config
 }
 
-func NewKeycloakValidator(url string) (res *KeycloakValidator, err error) {
+type Config struct {
+	passThroughUnAuthenticated bool
+}
+
+func NewKeycloakValidator(url string, cfg Config) (res *KeycloakValidator, err error) {
 	pk, err := getRSAPublicKeyFromKeycloak(url)
 	if err != nil {
 		return nil, err
 	}
 	return &KeycloakValidator{
-		pk: pk,
+		pk:  pk,
+		cfg: cfg,
 	}, nil
 }
 
@@ -113,17 +120,26 @@ func (kv *KeycloakValidator) ParseToken(header string) (result *Claims, err erro
 	}, nil
 }
 
+type contextKey string
+
+const subKey contextKey = "sub"
+
 func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		header = strings.TrimPrefix(header, "Bearer ")
-		_, err := kv.ParseToken(header)
+		if header == "" && kv.cfg.passThroughUnAuthenticated {
+			next.ServeHTTP(w, r)
+			return
+		}
+		claims, err := kv.ParseToken(header)
 		if err != nil {
 			fmt.Println("Error parsing jwt token", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		next.ServeHTTP(w, r)
+		ctx := context.WithValue(r.Context(), subKey, claims.Sub)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
