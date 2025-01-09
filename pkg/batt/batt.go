@@ -222,7 +222,6 @@ func (c *BattClient) SearchIssues(req SearchIssueRequest) (res *IssueResponse, e
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(jsonData))
 	resp, err := c.request(http.MethodPost, c.SofBattBaseUrl, "issue/v1/issues/searches", jsonData)
 	if err != nil {
 		return nil, err
