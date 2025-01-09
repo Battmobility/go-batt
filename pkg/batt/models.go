@@ -462,12 +462,12 @@ type IssueResponse struct {
 }
 
 type SearchIssueRequest struct {
-	VehicleId          string   `json:"vehicleId"`
-	BookingId          string   `json:"bookingId"`
-	UserRemoteId       string   `json:"userRemoteId"`
-	AssignedToRemoteId string   `json:"assignedToRemoteId"`
-	Title              string   `json:"title"`
-	Statuses           []string `json:"statuses"`
+	VehicleId          string   `json:"vehicleId,omitempty"`
+	BookingId          string   `json:"bookingId,omitempty"`
+	UserRemoteId       string   `json:"userRemoteId,omitempty"`
+	AssignedToRemoteId string   `json:"assignedToRemoteId,omitempty"`
+	Title              string   `json:"title,omitempty"`
+	Statuses           []string `json:"statuses,omitempty"`
 }
 
 type VehicleGroup struct {

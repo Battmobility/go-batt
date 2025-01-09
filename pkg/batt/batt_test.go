@@ -69,6 +69,19 @@ func TestCreateIssue(t *testing.T) {
 	fmt.Println(issue)
 }
 
+func TestSearchIssue(t *testing.T) {
+	//create client
+	//search for issues from a certain vehicle with a title and statuses CREATED, RESOLVED
+	bc := NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "", "https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
+	issues, err := bc.SearchIssues(SearchIssueRequest{
+		VehicleId: "2ATZ899",
+		Title:     "carwash",
+		Statuses:  []string{"CREATED", "RESOLVED"},
+	})
+	assert.NoError(t, err)
+	fmt.Println(issues)
+}
+
 func TestGetNeedsCorrectionBookings(t *testing.T) {
 	needsCorrection := true
 	bc := NewBattClient("dummy", "", "dummy", "batt", os.Getenv("BATT_PASSWORD"))
