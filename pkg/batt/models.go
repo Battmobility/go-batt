@@ -1,6 +1,9 @@
 package batt
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 const (
 	BATTERYSTATUS_NOT_CHARGING       = "NOT_CHARGING"
@@ -13,6 +16,8 @@ const (
 	ISSUEREASON_BATTERY              = "BATTERY"
 	ISSUEREASON_LOCATION             = "LOCATION"
 	ISSUEREASON_CLOSE_NAV            = "CLOSE_NAV"
+	ISSUESTATUS_CREATED              = "CREATED"
+	ISSUESTATUS_RESOLVED             = "RESOLVED"
 	TELEMATICSPROVIDER_FLESPI        = "FLESPI"
 	TELEMATICSPROVIDER_FLESPI_TWILIO = "FLESPI_TWILIO"
 	TELEMATICSPROVIDER_INVERS        = "INVERS"
@@ -426,18 +431,30 @@ type CreateIssueRequest struct {
 	Title              string `json:"title"`
 }
 type Issue struct {
-	Booking       *Booking         `json:"booking"`
-	Vehicle       *Vehicle         `json:"vehicle"`
-	Nav           *NonAvailability `json:"nav"`
-	PrevUser      *BackOfficeUser  `json:"prev_user"`
-	NextUser      *BackOfficeUser  `json:"next_user"`
-	BatteryStatus *BatteryStatus   `json:"battery_status"`
-	Location      *GpsLocation     `json:"location"`
-	BatteryError  string           `json:"battery_error"`
-	LocationError string           `json:"location_error"`
-	Distance      float64          `json:"distance"`
-	Reason        string           `json:"reason"`
-	IssueType     string           `json:"issue_type"`
+	Booking           *Booking         `json:"booking"`
+	Vehicle           *Vehicle         `json:"vehicle"`
+	Nav               *NonAvailability `json:"nav"`
+	PrevUser          *BackOfficeUser  `json:"prev_user"`
+	NextUser          *BackOfficeUser  `json:"next_user"`
+	BatteryStatus     *BatteryStatus   `json:"battery_status"`
+	Location          *GpsLocation     `json:"location"`
+	BatteryError      string           `json:"battery_error"`
+	LocationError     string           `json:"location_error"`
+	LastUpdated       string           `json:"lastUpdated"`
+	LastUpdatedParsed time.Time        `json:"-"`
+	Distance          float64          `json:"distance"`
+	Reason            string           `json:"reason"`
+	Status            string           `json:"status"`
+	IssueType         string           `json:"issue_type"`
+}
+
+// parse last updated from issue
+func (i *Issue) ParseLastUpdated() {
+	parsed, err := time.Parse(time.RFC3339, strings.TrimSuffix(i.LastUpdated, "[Etc/UTC]"))
+	if err != nil {
+		return
+	}
+	i.LastUpdatedParsed = parsed
 }
 
 type IssueResponse struct {
