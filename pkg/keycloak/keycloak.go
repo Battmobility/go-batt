@@ -21,6 +21,7 @@ const (
 type Claims struct {
 	Sub   string   `json:"sub"`
 	Name  string   `json:"name"`
+	Email string   `json:"email"`
 	Roles []string `json:"roles"`
 }
 
@@ -116,6 +117,7 @@ func (kv *KeycloakValidator) ParseToken(header string) (result *Claims, err erro
 	return &Claims{
 		Name:  claims["name"].(string),
 		Sub:   claims["sub"].(string),
+		Email: claims["email"].(string),
 		Roles: strings.Split(claims["realm_access"].(map[string]interface{})["roles"].([]interface{})[0].(string), ","),
 	}, nil
 }
@@ -123,6 +125,7 @@ func (kv *KeycloakValidator) ParseToken(header string) (result *Claims, err erro
 type contextKey string
 
 const SubKey contextKey = "sub"
+const EmailKey contextKey = "email"
 
 func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -139,6 +142,7 @@ func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 			return
 		}
 		ctx := context.WithValue(r.Context(), SubKey, claims.Sub)
+		ctx = context.WithValue(ctx, EmailKey, claims.Email)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
