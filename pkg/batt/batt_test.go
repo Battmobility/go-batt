@@ -182,10 +182,25 @@ func TestGetBookings(t *testing.T) {
 	f, err := os.Create("report.csv")
 	assert.NoError(t, err)
 	defer f.Close()
-	_, err = f.WriteString("LicensePlate,Start,End,TotalHours,TotalKm,TotalKmPerHour,TotalRevenue,TotalUsers,LeasePriceExVat,PnL\n")
+	_, err = f.WriteString("LicensePlate,Start,End,TotalHours,TotalKm,KmPerHour,KmPerBooking,TotalBookings,TotalRevenue,TotalUsers,LeasePriceExVat,PnL\n")
 	assert.NoError(t, err)
 	for _, report := range reports {
-		_, err = f.WriteString(fmt.Sprintf("%s,%s,%s,%.1f,%d,%.2f,%.2f,%d,%.2f,%.2f\n", report.LicensePlate, report.Start.Format("2006-01-02"), report.End.Format("2006-01-02"), report.TotalHours, report.TotalKm, report.TotalKmPerHour, report.TotalRevenue, report.TotalUsers, report.LeasePriceExVat, report.TotalRevenue-report.LeasePriceExVat))
+		_, err = f.WriteString(
+			fmt.Sprintf(
+				"%s,%s,%s,%.1f,%d,%.2f,%.2f,%d,%.2f,%d,%.2f,%.2f\n",
+				report.LicensePlate,
+				report.Start.Format("2006-01-02"),
+				report.End.Format("2006-01-02"),
+				report.TotalHours,
+				report.TotalKm,
+				report.KmPerHour,
+				report.KmPerBooking,
+				report.TotalBookings,
+				report.TotalRevenue,
+				report.TotalUsers,
+				report.LeasePriceExVat,
+				report.TotalRevenue-report.LeasePriceExVat,
+			))
 		assert.NoError(t, err)
 	}
 }
@@ -241,14 +256,16 @@ func CalculateRevenue(bc *BattClient, start, end time.Time, vehicleId, licensePl
 
 	}
 	return &VehicleReport{
-		LicensePlate:   licensePlate,
-		Start:          start,
-		End:            end,
-		TotalHours:     totalHours,
-		TotalKm:        totalKm,
-		TotalKmPerHour: float64(totalKm) / totalHours,
-		TotalRevenue:   totalRevenue,
-		TotalUsers:     totalUsers,
+		LicensePlate:  licensePlate,
+		Start:         start,
+		End:           end,
+		TotalHours:    totalHours,
+		TotalKm:       totalKm,
+		KmPerBooking:  float64(totalKm) / float64(len(bookings.Bookings)),
+		KmPerHour:     float64(totalKm) / totalHours,
+		TotalRevenue:  totalRevenue,
+		TotalBookings: len(bookings.Bookings),
+		TotalUsers:    totalUsers,
 	}, nil
 }
 
@@ -257,10 +274,13 @@ type VehicleReport struct {
 	Start           time.Time
 	End             time.Time
 	TotalHours      float64
+	HoursPerBooking float64
 	TotalKm         int
-	TotalKmPerHour  float64
+	KmPerBooking    float64
+	KmPerHour       float64
 	TotalRevenue    float64
 	TotalUsers      int
+	TotalBookings   int
 	LeasePriceExVat float64
 	PnL             float64
 }
