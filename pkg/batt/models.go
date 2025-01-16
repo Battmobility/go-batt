@@ -543,3 +543,13 @@ type FinishedBookingPrice struct {
 	TotalVat                     float64  `json:"totalVat"`
 	VatRate                      float64  `json:"vatRate"`
 }
+type BackOfficeVehicleResponse struct {
+	Vehicles map[string]BackOfficeVehicle `json:"vehicles"`
+}
+
+type BackOfficeVehicle struct {
+	ID                       string  `json:"id"`
+	LicensePlate             string  `json:"licensePlate"`
+	LeasingMonthlyPriceExVat float64 `json:"leasingMonthlyPriceExVat"`
+	SofBattId                string  `json:"sofbattId"`
+}

@@ -157,16 +157,40 @@ func TestGetBookings(t *testing.T) {
 	//first get all vehicles in group
 	vg, err := bc.GetVehicleGroup(eigenBeheerId)
 	assert.NoError(t, err)
+	vehicleIds := ""
+	for _, v := range vg.Vehicles {
+		vehicleIds += v.ID + ","
+	}
+	url := fmt.Sprintf("https://backofficetmp.battmobility.be/admin/v1/vehicles/map?sofbattIds=%s", vehicleIds)
+	res, err := http.Get(url)
+	assert.NoError(t, err)
+	backOfficeVehicles := BackOfficeVehicleResponse{}
+	err = json.NewDecoder(res.Body).Decode(&backOfficeVehicles)
+	assert.NoError(t, err)
+	reports := []VehicleReport{}
 	for _, v := range vg.Vehicles {
 		//start is 1st of December 2024
-		err = CalculateRevenue(bc, start, end, v.ID)
+		fmt.Println("calculating revenue for", v.ID)
+		report, err := CalculateRevenue(bc, start, end, v.ID, v.LicensePlate)
 		if err != nil {
 			log.Println(err)
 		}
+		report.LeasePriceExVat = backOfficeVehicles.Vehicles[v.ID].LeasingMonthlyPriceExVat
+		reports = append(reports, *report)
+	}
+	//now output the reports slice to a csv file
+	f, err := os.Create("report.csv")
+	assert.NoError(t, err)
+	defer f.Close()
+	_, err = f.WriteString("LicensePlate,Start,End,TotalHours,TotalKm,TotalKmPerHour,TotalRevenue,TotalUsers,LeasePriceExVat,PnL\n")
+	assert.NoError(t, err)
+	for _, report := range reports {
+		_, err = f.WriteString(fmt.Sprintf("%s,%s,%s,%.1f,%d,%.2f,%.2f,%d,%.2f,%.2f\n", report.LicensePlate, report.Start.Format("2006-01-02"), report.End.Format("2006-01-02"), report.TotalHours, report.TotalKm, report.TotalKmPerHour, report.TotalRevenue, report.TotalUsers, report.LeasePriceExVat, report.TotalRevenue-report.LeasePriceExVat))
+		assert.NoError(t, err)
 	}
 }
 
-func CalculateRevenue(bc *BattClient, start, end time.Time, vehicleId string) error {
+func CalculateRevenue(bc *BattClient, start, end time.Time, vehicleId, licensePlate string) (res *VehicleReport, err error) {
 	exemptedClients := map[string]bool{
 		"VlootBeheer":     true,
 		"BattMobility NV": true,
@@ -182,7 +206,7 @@ func CalculateRevenue(bc *BattClient, start, end time.Time, vehicleId string) er
 		},
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//print user, start date, client, fbp for every booking
 	//calculate total hours, total km/hour, total km, total revenue, total number of users
@@ -197,6 +221,11 @@ func CalculateRevenue(bc *BattClient, start, end time.Time, vehicleId string) er
 		if exemptedClients[booking.Client.Name] {
 			continue
 		}
+		if booking.Vehicle.Owner == booking.User.RemoteID {
+			fmt.Println("skipping owner", booking.User.DisplayName, booking.Vehicle.ID)
+			continue
+		}
+		//fmt.Println(booking.User.DisplayName, booking.Period.ParsedStart.Format("2006-01-02"), booking.Client.Name, booking.FinishedBookingPrice.TotalExclVat)
 		duration := booking.Period.ParsedEnd.Sub(booking.Period.ParsedStart).Hours()
 		km := booking.FinishedBookingPrice.Km
 		revenue := booking.FinishedBookingPrice.TotalExclVat
@@ -211,6 +240,27 @@ func CalculateRevenue(bc *BattClient, start, end time.Time, vehicleId string) er
 		}
 
 	}
-	fmt.Printf("%s from %v to %v: %.2f hours %d km %.2f km/h %.2f EUR revenue %d users\n", vehicleId, start.Format("2006-01-02"), end.Format("2006-01-02"), totalHours, totalKm, float64(totalKm)/totalHours, totalRevenue, totalUsers)
-	return nil
+	return &VehicleReport{
+		LicensePlate:   licensePlate,
+		Start:          start,
+		End:            end,
+		TotalHours:     totalHours,
+		TotalKm:        totalKm,
+		TotalKmPerHour: float64(totalKm) / totalHours,
+		TotalRevenue:   totalRevenue,
+		TotalUsers:     totalUsers,
+	}, nil
+}
+
+type VehicleReport struct {
+	LicensePlate    string
+	Start           time.Time
+	End             time.Time
+	TotalHours      float64
+	TotalKm         int
+	TotalKmPerHour  float64
+	TotalRevenue    float64
+	TotalUsers      int
+	LeasePriceExVat float64
+	PnL             float64
 }
