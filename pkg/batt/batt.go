@@ -40,7 +40,6 @@ func NewBattClient(base, backoffice, auth, username, password string) (result *B
 }
 
 func (c *BattClient) refreshToken() error {
-	fmt.Println("refreshing token")
 	data := url.Values{}
 	data.Set("client_id", "web")
 	data.Set("username", c.Username)

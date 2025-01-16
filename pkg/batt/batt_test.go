@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -146,4 +147,70 @@ func TestGetNeedsCorrectionBookings(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestGetBookings(t *testing.T) {
+	bc := NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "", "https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
+	eigenBeheerId := "4c7bfd6e-12d6-44f1-8159-88197977d4df"
+	start := time.Date(2024, 12, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	//first get all vehicles in group
+	vg, err := bc.GetVehicleGroup(eigenBeheerId)
+	assert.NoError(t, err)
+	for _, v := range vg.Vehicles {
+		//start is 1st of December 2024
+		err = CalculateRevenue(bc, start, end, v.ID)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func CalculateRevenue(bc *BattClient, start, end time.Time, vehicleId string) error {
+	exemptedClients := map[string]bool{
+		"VlootBeheer":     true,
+		"BattMobility NV": true,
+	}
+
+	doNotInvoice := false
+	bookings, err := bc.SearchBookings(SearchBookingRequest{
+		VehicleId:    vehicleId,
+		DoNotInvoice: &doNotInvoice,
+		EndPeriod: Period{
+			Start: &start,
+			End:   &end,
+		},
+	})
+	if err != nil {
+		return err
+	}
+	//print user, start date, client, fbp for every booking
+	//calculate total hours, total km/hour, total km, total revenue, total number of users
+	//exclude bookings from exemptedClients
+	totalHours := 0.0
+	totalKm := 0
+	totalRevenue := 0.0
+	totalUsers := 0
+	usersCache := map[string]bool{}
+
+	for _, booking := range bookings.Bookings {
+		if exemptedClients[booking.Client.Name] {
+			continue
+		}
+		duration := booking.Period.ParsedEnd.Sub(booking.Period.ParsedStart).Hours()
+		km := booking.FinishedBookingPrice.Km
+		revenue := booking.FinishedBookingPrice.TotalExclVat
+
+		totalHours += duration
+		totalKm += km
+		totalRevenue += revenue
+		//fmt.Println(booking.Period.ParsedStart.Format("2006-01-02"), booking.User.DisplayName)
+		if _, ok := usersCache[booking.User.RemoteID]; !ok {
+			totalUsers++
+			usersCache[booking.User.RemoteID] = true
+		}
+
+	}
+	fmt.Printf("%s from %v to %v: %.2f hours %d km %.2f km/h %.2f EUR revenue %d users\n", vehicleId, start.Format("2006-01-02"), end.Format("2006-01-02"), totalHours, totalKm, float64(totalKm)/totalHours, totalRevenue, totalUsers)
+	return nil
 }

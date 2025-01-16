@@ -34,9 +34,12 @@ type SearchVehicleRequest struct {
 }
 type FilterCriteria struct{}
 type SearchBookingRequest struct {
+	VehicleId       string   `json:"vehicleId"`
 	Period          Period   `json:"period"`
+	EndPeriod       Period   `json:"endPeriod"`
 	Statuses        []string `json:"statuses"`
 	NeedsCorrection *bool    `json:"needsCorrection,omitempty"`
+	DoNotInvoice    *bool    `json:"doNotInvoice,omitempty"`
 }
 type SearchAvailabilityRequest struct {
 	Period     Period   `json:"period"`
@@ -250,6 +253,8 @@ type Booking struct {
 	Status                  string      `json:"status"`
 	NextPossibleStatuses    []string    `json:"nextPossibleStatuses"`
 	InActivePeriod          bool        `json:"inActivePeriod"`
+	DoNotInvoice            bool        `json:"doNotInvoice"`
+	Invoiced                *bool       `json:"invoiced"`
 	ActiveBookingForVehicle interface{} `json:"activeBookingForVehicle"`
 	Active                  bool        `json:"active"`
 	Overdue                 bool        `json:"overdue"`
@@ -282,15 +287,16 @@ type Booking struct {
 		AuthCommentsMandatory   bool        `json:"authCommentsMandatory"`
 		AuthCommentsDescription interface{} `json:"authCommentsDescription"`
 	} `json:"client"`
-	DateCreated       string  `json:"dateCreated"`
-	LastUpdated       string  `json:"lastUpdated"`
-	MileageStartValue float64 `json:"mileageStartValue"`
-	MileageEndValue   float64 `json:"mileageEndValue"`
-	MileageDelta      float64 `json:"mileageDelta"`
-	PriceType         string  `json:"priceType"`
-	Price             float64 `json:"price"`
-	KmPrice           float64 `json:"kmPrice"`
-	RateCard          struct {
+	DateCreated          string               `json:"dateCreated"`
+	LastUpdated          string               `json:"lastUpdated"`
+	MileageStartValue    float64              `json:"mileageStartValue"`
+	MileageEndValue      float64              `json:"mileageEndValue"`
+	MileageDelta         float64              `json:"mileageDelta"`
+	PriceType            string               `json:"priceType"`
+	Price                float64              `json:"price"`
+	KmPrice              float64              `json:"kmPrice"`
+	FinishedBookingPrice FinishedBookingPrice `json:"finishedBookingPrice"`
+	RateCard             struct {
 		ID   string `json:"id"`
 		Name string `json:"name"`
 	} `json:"rateCard"`
@@ -487,4 +493,53 @@ type VehicleTelematics struct {
 type UpdateBookingRequest struct {
 	CorrectedKm     *int  `json:"correctedKm,omitempty"`
 	NeedsCorrection *bool `json:"needsCorrection,omitempty"`
+}
+
+/*
+	"finishedBookingPrice": {
+	  "startDate": "2025-01-19T11:00:00Z[Etc/UTC]",
+	  "endDate": "2025-01-19T20:00:00Z[Etc/UTC]",
+	  "kmPrice": 0.18,
+	  "km": 0,
+	  "amount": 1,
+	  "timeAmount": 1,
+	  "unit": "DAYS",
+	  "unitPrice": 27.45,
+	  "timeTotal": 27.45,
+	  "hourlyTotalNotCharged": null,
+	  "changeFromHourlyToDaily": false,
+	  "kmTotal": 0,
+	  "total": 27.45,
+	  "kmPriceExclVat": 0.1488,
+	  "unitPriceExclVat": 22.686,
+	  "hourlyTotalNotChargedExclVat": null,
+	  "timeTotalExclVat": 22.686,
+	  "kmTotalExclVat": 0,
+	  "totalExclVat": 22.686,
+	  "totalVat": 4.764,
+	  "vatRate": 1.21
+	}
+*/
+type FinishedBookingPrice struct {
+	StartDate                    string   `json:"startDate"`
+	EndDate                      string   `json:"endDate"`
+	KmPrice                      float64  `json:"kmPrice"`
+	Km                           int      `json:"km"`
+	Amount                       float64  `json:"amount"`
+	TimeAmount                   float64  `json:"timeAmount"`
+	Unit                         string   `json:"unit"`
+	UnitPrice                    float64  `json:"unitPrice"`
+	TimeTotal                    float64  `json:"timeTotal"`
+	HourlyTotalNotCharged        *float64 `json:"hourlyTotalNotCharged,omitempty"`
+	ChangeFromHourlyToDaily      bool     `json:"changeFromHourlyToDaily"`
+	KmTotal                      float64  `json:"kmTotal"`
+	Total                        float64  `json:"total"`
+	KmPriceExclVat               float64  `json:"kmPriceExclVat"`
+	UnitPriceExclVat             float64  `json:"unitPriceExclVat"`
+	HourlyTotalNotChargedExclVat *float64 `json:"hourlyTotalNotChargedExclVat,omitempty"`
+	TimeTotalExclVat             float64  `json:"timeTotalExclVat"`
+	KmTotalExclVat               float64  `json:"kmTotalExclVat"`
+	TotalExclVat                 float64  `json:"totalExclVat"`
+	TotalVat                     float64  `json:"totalVat"`
+	VatRate                      float64  `json:"vatRate"`
 }
