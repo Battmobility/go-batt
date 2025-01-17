@@ -152,6 +152,9 @@ func TestGetNeedsCorrectionBookings(t *testing.T) {
 func TestGetBookings(t *testing.T) {
 	bc := NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "", "https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
 	eigenBeheerId := "4c7bfd6e-12d6-44f1-8159-88197977d4df"
+	vgs, err := bc.GetVehicleGroups("8c2011de-c5fa-4ead-95ef-50c22e5b5b80")
+	assert.NoError(t, err)
+	fmt.Println(vgs.VehicleGroups)
 	start := time.Date(2024, 12, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	//first get all vehicles in group
@@ -171,7 +174,7 @@ func TestGetBookings(t *testing.T) {
 	for _, v := range vg.Vehicles {
 		//start is 1st of December 2024
 		fmt.Println("calculating revenue for", v.ID)
-		report, err := CalculateRevenue(bc, start, end, v.ID, v.LicensePlate)
+		report, err := CalculateRevenue(bc, start, end, v.ID, v.LicensePlate, v.Name)
 		if err != nil {
 			log.Println(err)
 		}
@@ -182,13 +185,14 @@ func TestGetBookings(t *testing.T) {
 	f, err := os.Create("report.csv")
 	assert.NoError(t, err)
 	defer f.Close()
-	_, err = f.WriteString("LicensePlate,Start,End,TotalHours,TotalKm,KmPerHour,KmPerBooking,TotalBookings,TotalRevenue,TotalUsers,LeasePriceExVat,PnL\n")
+	_, err = f.WriteString("LicensePlate,Name,Start,End,TotalHours,TotalKm,KmPerHour,KmPerBooking,TotalBookings,TotalRevenue,TotalUsers,LeasePriceExVat,PnL\n")
 	assert.NoError(t, err)
 	for _, report := range reports {
 		_, err = f.WriteString(
 			fmt.Sprintf(
-				"%s,%s,%s,%.1f,%d,%.2f,%.2f,%d,%.2f,%d,%.2f,%.2f\n",
+				"%s,%s,%s,%s,%.1f,%d,%.2f,%.2f,%d,%.2f,%d,%.2f,%.2f\n",
 				report.LicensePlate,
+				report.Name,
 				report.Start.Format("2006-01-02"),
 				report.End.Format("2006-01-02"),
 				report.TotalHours,
@@ -205,7 +209,7 @@ func TestGetBookings(t *testing.T) {
 	}
 }
 
-func CalculateRevenue(bc *BattClient, start, end time.Time, vehicleId, licensePlate string) (res *VehicleReport, err error) {
+func CalculateRevenue(bc *BattClient, start, end time.Time, vehicleId, licensePlate, name string) (res *VehicleReport, err error) {
 	exemptedClients := map[string]bool{
 		"VlootBeheer":     true,
 		"BattMobility NV": true,
@@ -257,6 +261,7 @@ func CalculateRevenue(bc *BattClient, start, end time.Time, vehicleId, licensePl
 	}
 	return &VehicleReport{
 		LicensePlate:  licensePlate,
+		Name:          name,
 		Start:         start,
 		End:           end,
 		TotalHours:    totalHours,
@@ -271,6 +276,7 @@ func CalculateRevenue(bc *BattClient, start, end time.Time, vehicleId, licensePl
 
 type VehicleReport struct {
 	LicensePlate    string
+	Name            string
 	Start           time.Time
 	End             time.Time
 	TotalHours      float64

@@ -476,6 +476,9 @@ type SearchIssueRequest struct {
 	Statuses           []string `json:"statuses,omitempty"`
 }
 
+type VehicleGroupsPage struct {
+	VehicleGroups []VehicleGroup `json:"vehicleGroups"`
+}
 type VehicleGroup struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`

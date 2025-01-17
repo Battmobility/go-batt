@@ -173,6 +173,19 @@ func (c *BattClient) GetVehicle(vehicleId string) (res *Vehicle, err error) {
 	}
 	return result, nil
 }
+func (c *BattClient) GetVehicleGroups(organizationId string) (res *VehicleGroupsPage, err error) {
+	resp, err := c.request(http.MethodGet, c.SofBattBaseUrl, fmt.Sprintf("vehicle-group/v1/vehicle-groups?organizationId=%s", organizationId), nil)
+	if err != nil {
+		return nil, err
+	}
+	result := &VehicleGroupsPage{}
+	err = json.NewDecoder(resp).Decode(result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (c *BattClient) GetVehicleGroup(id string) (res *VehicleGroup, err error) {
 	resp, err := c.request(http.MethodGet, c.SofBattBaseUrl, fmt.Sprintf("vehicle-group/v1/vehicle-groups/%s", id), nil)
 	if err != nil {
