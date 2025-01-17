@@ -118,7 +118,6 @@ func (kv *KeycloakValidator) ParseToken(header string) (result *Claims, err erro
 		Name:  claims["name"].(string),
 		Sub:   claims["sub"].(string),
 		Email: claims["email"].(string),
-		Roles: claims["roles"].([]string),
 	}, nil
 }
 
