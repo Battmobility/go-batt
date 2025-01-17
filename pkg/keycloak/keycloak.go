@@ -118,7 +118,7 @@ func (kv *KeycloakValidator) ParseToken(header string) (result *Claims, err erro
 		Name:  claims["name"].(string),
 		Sub:   claims["sub"].(string),
 		Email: claims["email"].(string),
-		Roles: strings.Split(claims["realm_access"].(map[string]interface{})["roles"].([]interface{})[0].(string), ","),
+		Roles: claims["roles"].([]string),
 	}, nil
 }
 

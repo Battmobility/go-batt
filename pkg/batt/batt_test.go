@@ -290,3 +290,38 @@ type VehicleReport struct {
 	LeasePriceExVat float64
 	PnL             float64
 }
+
+func DumpReportCsv(filename string, reports []VehicleReport) error {
+	f, err := os.Create("report.csv")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = f.WriteString("LicensePlate,Name,Start,End,TotalHours,TotalKm,KmPerHour,KmPerBooking,TotalBookings,TotalRevenue,TotalUsers,LeasePriceExVat,PnL\n")
+	if err != nil {
+		return err
+	}
+	for _, report := range reports {
+		_, err = f.WriteString(
+			fmt.Sprintf(
+				"%s,%s,%s,%s,%.1f,%d,%.2f,%.2f,%d,%.2f,%d,%.2f,%.2f\n",
+				report.LicensePlate,
+				report.Name,
+				report.Start.Format("2006-01-02"),
+				report.End.Format("2006-01-02"),
+				report.TotalHours,
+				report.TotalKm,
+				report.KmPerHour,
+				report.KmPerBooking,
+				report.TotalBookings,
+				report.TotalRevenue,
+				report.TotalUsers,
+				report.LeasePriceExVat,
+				report.TotalRevenue-report.LeasePriceExVat,
+			))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

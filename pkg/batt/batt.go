@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	BOOKING = "BOOKING"
-	BLOCKED = "BLOCKED"
-	ACTIVE  = "ACTIVE"
+	BOOKING   = "BOOKING"
+	BLOCKED   = "BLOCKED"
+	ACTIVE    = "ACTIVE"
+	battOrgId = "8c2011de-c5fa-4ead-95ef-50c22e5b5b80"
 )
 
 type BattClient struct {
