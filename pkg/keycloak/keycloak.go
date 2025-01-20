@@ -114,10 +114,16 @@ func (kv *KeycloakValidator) ParseToken(header string) (result *Claims, err erro
 	if err != nil {
 		return nil, err
 	}
+	roles := claims["realm_access"].(map[string]interface{})["roles"].([]interface{})
+	rolesParsed := make([]string, len(roles))
+	for i, v := range roles {
+		rolesParsed[i] = v.(string)
+	}
 	return &Claims{
 		Name:  claims["name"].(string),
 		Sub:   claims["sub"].(string),
 		Email: claims["email"].(string),
+		Roles: rolesParsed,
 	}, nil
 }
 
