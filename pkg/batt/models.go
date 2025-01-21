@@ -496,6 +496,7 @@ type VehicleTelematics struct {
 type UpdateBookingRequest struct {
 	CorrectedKm     *int  `json:"correctedKm,omitempty"`
 	NeedsCorrection *bool `json:"needsCorrection,omitempty"`
+	DoNotInvoice    *bool `json:"doNotInvoice,omitempty"`
 }
 
 /*
