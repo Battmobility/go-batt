@@ -131,6 +131,20 @@ type contextKey string
 
 const SubKey contextKey = "sub"
 const EmailKey contextKey = "email"
+const RolesKey contextKey = "roles"
+
+// IsAdminRequest checks if the request is from an admin user
+func IsAdminRequest(r *http.Request) bool {
+	roles, ok := r.Context().Value(RolesKey).([]string)
+	return ok && contains(roles, BattAdminRole)
+}
+
+// GetSubAndEmail returns the sub and email from the request context or empty strings if not present
+func GetSubAndEmail(r *http.Request) (sub, email string) { //nolint: nonamedreturns
+	sub, _ = r.Context().Value(SubKey).(string)
+	email, _ = r.Context().Value(EmailKey).(string)
+	return
+}
 
 func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -148,6 +162,7 @@ func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 		}
 		ctx := context.WithValue(r.Context(), SubKey, claims.Sub)
 		ctx = context.WithValue(ctx, EmailKey, claims.Email)
+		ctx = context.WithValue(ctx, RolesKey, claims.Roles)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
