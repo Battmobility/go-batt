@@ -18,6 +18,10 @@ const (
 	BattAdminRole = "BattAdmin"
 )
 
+var (
+	ErrNoRS256Key = errors.New("no RS256 key found on keycloak url")
+)
+
 type Claims struct {
 	Sub   string   `json:"sub"`
 	Name  string   `json:"name"`
@@ -79,11 +83,17 @@ func getRSAPublicKeyFromKeycloak(url string) (*rsa.PublicKey, error) {
 		return nil, err
 	}
 
-	// Assuming there's only one key. You might need to select the correct one based on `kid`
-	if len(certs.Keys) < 1 {
-		return nil, fmt.Errorf("no keys found on keycloak url")
+	keyIndex := -1
+	for index, key := range certs.Keys {
+		if key.Alg == "RS256" {
+			keyIndex = index
+			break
+		}
 	}
-	key := certs.Keys[0]
+	if keyIndex == -1 {
+		return nil, ErrNoRS256Key
+	}
+	key := certs.Keys[keyIndex]
 
 	nBytes, err := jwt.DecodeSegment(key.N)
 	if err != nil {
