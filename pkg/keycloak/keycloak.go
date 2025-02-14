@@ -1,6 +1,7 @@
 package keycloak
 
 import (
+	"bytes"
 	"context"
 	"crypto/rsa"
 	"encoding/json"
@@ -10,16 +11,19 @@ import (
 	"math/big"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 )
 
 const (
 	BattAdminRole = "BattAdmin"
+	AdminClientId = "admin-cli"
 )
 
 var (
-	ErrNoRS256Key = errors.New("no RS256 key found on keycloak url")
+	ErrNoRS256Key       = errors.New("no RS256 key found on keycloak url")
+	ErrFailedToGetToken = errors.New("failed to get token")
 )
 
 type Claims struct {
@@ -198,4 +202,67 @@ func contains(s []string, search string) bool {
 		}
 	}
 	return false
+}
+
+type TokenProvider struct {
+	url             string
+	data            string
+	token           string
+	tokenExpiration time.Time
+}
+
+func NewTokenProvider(url, realm, username, password, client_id string) (res *TokenProvider, err error) {
+	return &TokenProvider{
+		url:  fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", url, realm),
+		data: fmt.Sprintf("username=%s&password=%s&grant_type=password&client_id=%s", username, password, client_id),
+	}, nil
+}
+
+// GetKeycloakToken fetches the token from Keycloak if the cached token is expired. Returns the cached token.
+// Not thread-safe.
+func (tp *TokenProvider) GetKeycloakToken() (string, error) {
+	if time.Now().Before(tp.tokenExpiration) {
+		return tp.token, nil
+	}
+	tp.tokenExpiration = time.Time{}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second) //nolint:mnd
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tp.url, bytes.NewBufferString(tp.data))
+	if err != nil {
+		return "", fmt.Errorf("creating POST request failed: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("POST call failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("%w (%d): %s", ErrFailedToGetToken, resp.StatusCode, string(bodyBytes))
+	}
+
+	var tokenResponse KeycloakTokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
+		return "", fmt.Errorf("json decoding failed: %w", err)
+	}
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenResponse.AccessToken, &jwt.StandardClaims{})
+	if err != nil {
+		return "", fmt.Errorf("jwt parsing failed: %w", err)
+	}
+	if claims, ok := token.Claims.(*jwt.StandardClaims); !ok {
+		return "", fmt.Errorf("jwt claims parsing failed: %w", err)
+	} else {
+		// ask for a new token a minute before the actual expiration
+		tp.tokenExpiration = time.Unix(claims.ExpiresAt, 0).Add(-time.Minute)
+		tp.token = tokenResponse.AccessToken
+	}
+	return tp.token, nil
+}
+
+type KeycloakTokenResponse struct {
+	AccessToken string `json:"access_token"` //nolint:tagliatelle
 }
