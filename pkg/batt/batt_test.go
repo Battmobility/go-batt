@@ -11,16 +11,25 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSearchVehicles(t *testing.T) {
+	t.Parallel()
+	if os.Getenv("BATT_PASSWORD") == "" {
+		t.Skip("skipping test; BATT_PASSWORD is empty")
+	}
 	battClient := NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "", "https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
 	veh, err := battClient.SearchVehicles(&SearchVehicleRequest{})
-	fmt.Print(err)
+	require.NoError(t, err)
 	fmt.Println(veh.Vehicles)
 }
 
 func TestCreateVBL(t *testing.T) {
+	t.Parallel()
+	if os.Getenv("BATT_PASSWORD") == "" {
+		t.Skip("skipping test; BATT_PASSWORD is empty")
+	}
 	bc := NewBattClient("https://booking-staging.battmobility.be/web-api/", "", "https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
 	vbl, err := bc.CreateVehicleBaseLocation(VehicleBaseLocation{
 		Name: "hoi",
@@ -35,11 +44,15 @@ func TestCreateVBL(t *testing.T) {
 			Address: "Brabantdam 1, 9000 Gent",
 		},
 	})
-	assert.NoError(t, err)
-	fmt.Println(vbl)
+	require.NoError(t, err)
+	fmt.Println(vbl) //nolint:forbidigo
 }
 
 func TestAddVBLToVehicle(t *testing.T) {
+	t.Parallel()
+	if os.Getenv("BATT_PASSWORD") == "" {
+		t.Skip("skipping test; BATT_PASSWORD is empty")
+	}
 	bc := NewBattClient("https://booking-staging.battmobility.be/web-api/", "", "https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
 	veh, err := bc.UpdateVehicleLocation(UpdateVehicleRequest{
 		VehicleId: "1THX384",
@@ -48,28 +61,40 @@ func TestAddVBLToVehicle(t *testing.T) {
 			VehicleBaseLocationID: "2eabe147-b394-4c87-ad91-bbd7702f39d2",
 		},
 	})
-	assert.NoError(t, err)
-	fmt.Println(veh)
+	require.NoError(t, err)
+	fmt.Println(veh) //nolint:forbidigo
 }
 
 func TestGetVehicleGroup(t *testing.T) {
+	t.Parallel()
+	if os.Getenv("BATT_PASSWORD") == "" {
+		t.Skip("skipping test; BATT_PASSWORD is empty")
+	}
 	bc := NewBattClient("https://booking-staging.battmobility.be/web-api/", "", "https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
 	vg, err := bc.GetVehicleGroup("batt-all")
-	assert.NoError(t, err)
-	fmt.Println(vg)
+	require.NoError(t, err)
+	fmt.Println(vg) //nolint:forbidigo
 }
 
 func TestCreateIssue(t *testing.T) {
+	t.Parallel()
+	if os.Getenv("BATT_PASSWORD") == "" {
+		t.Skip("skipping test; BATT_PASSWORD is empty")
+	}
 	bc := NewBattClient("https://booking-staging.battmobility.be/web-api/", "", "https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
 	issue, err := bc.CreateIssue(CreateIssueRequest{
 		Title:     "hoi",
 		VehicleId: "2ATZ899",
 	})
-	assert.NoError(t, err)
-	fmt.Println(issue)
+	require.NoError(t, err)
+	fmt.Println(issue) //nolint:forbidigo
 }
 
 func TestSearchIssue(t *testing.T) {
+	t.Parallel()
+	if os.Getenv("BATT_PASSWORD") == "" {
+		t.Skip("skipping test; BATT_PASSWORD is empty")
+	}
 	//create client
 	//search for issues from a certain vehicle with a title and statuses CREATED, RESOLVED
 	bc := NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "", "https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
@@ -78,11 +103,15 @@ func TestSearchIssue(t *testing.T) {
 		Title:     "carwash",
 		Statuses:  []string{"CREATED", "RESOLVED"},
 	})
-	assert.NoError(t, err)
-	fmt.Println(issues)
+	require.NoError(t, err)
+	fmt.Println(issues) //nolint:forbidigo
 }
 
 func TestGetNeedsCorrectionBookings(t *testing.T) {
+	t.Parallel()
+	if os.Getenv("BATT_PASSWORD") == "" {
+		t.Skip("skipping test; BATT_PASSWORD is empty")
+	}
 	needsCorrection := true
 	bc := NewBattClient("dummy", "", "dummy", "batt", os.Getenv("BATT_PASSWORD"))
 	start := time.Now().Add(-24 * 25 * time.Hour)
@@ -121,7 +150,7 @@ func TestGetNeedsCorrectionBookings(t *testing.T) {
 			url := fmt.Sprintf("https://telematics.battmobility.be/flespi/mileage?deviceId=%s&timestamp=%s", telematics.ProviderDeviceId, sanitizedStartDate)
 			fmt.Println(url)
 			resp, err := http.Get(url)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			if resp.StatusCode == 200 {
 				mileage := &mileage{}
 				err = json.NewDecoder(resp.Body).Decode(mileage)
@@ -149,6 +178,10 @@ func TestGetNeedsCorrectionBookings(t *testing.T) {
 }
 
 func TestSearchBookings(t *testing.T) {
+	t.Parallel()
+	if os.Getenv("BATT_PASSWORD") == "" {
+		t.Skip("skipping test; BATT_PASSWORD is empty")
+	}
 	bc := NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "", "https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
 	start := time.Now()
 	end := time.Now().Add(24 * time.Hour)
