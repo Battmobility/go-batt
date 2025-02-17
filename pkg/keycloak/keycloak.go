@@ -220,13 +220,11 @@ func NewTokenProvider(url, realm, username, password, client_id string) (res *To
 
 // GetKeycloakToken fetches the token from Keycloak if the cached token is expired. Returns the cached token.
 // Not thread-safe.
-func (tp *TokenProvider) GetKeycloakToken() (string, error) {
+func (tp *TokenProvider) GetKeycloakToken(ctx context.Context) (string, error) {
 	if time.Now().Before(tp.tokenExpiration) {
 		return tp.token, nil
 	}
 	tp.tokenExpiration = time.Time{}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second) //nolint:mnd
-	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tp.url, bytes.NewBufferString(tp.data))
 	if err != nil {
 		return "", fmt.Errorf("creating POST request failed: %w", err)
