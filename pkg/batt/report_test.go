@@ -13,6 +13,10 @@ import (
 )
 
 func TestGetBookings(t *testing.T) {
+	t.Parallel()
+	if os.Getenv("BATT_PASSWORD") == "" {
+		t.Skip("skipping test; BATT_PASSWORD is empty")
+	}
 	bc := NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "", "https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
 	eigenBeheerId := "4c7bfd6e-12d6-44f1-8159-88197977d4df"
 	vgs, err := bc.GetVehicleGroups("8c2011de-c5fa-4ead-95ef-50c22e5b5b80")
