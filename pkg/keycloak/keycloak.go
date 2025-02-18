@@ -128,15 +128,32 @@ func (kv *KeycloakValidator) ParseToken(header string) (result *Claims, err erro
 	if err != nil {
 		return nil, err
 	}
-	roles := claims["realm_access"].(map[string]interface{})["roles"].([]interface{})
+	realmAccess, ok := claims["realm_access"].(map[string]interface{})
+	if !ok {
+		return nil, errors.New("realm_access claim not found")
+	}
+	roles, ok := realmAccess["roles"].([]interface{})
+	if !ok {
+		return nil, errors.New("roles claim not found")
+	}
 	rolesParsed := make([]string, len(roles))
 	for i, v := range roles {
-		rolesParsed[i] = v.(string)
+		rolesParsed[i], ok = v.(string)
+		if !ok {
+			return nil, errors.New("role not a string")
+		}
+	}
+	sub, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("sub claim not found")
+	}
+	email, ok := claims["email"].(string)
+	if !ok {
+		return nil, errors.New("email claim not found")
 	}
 	return &Claims{
-		Name:  claims["name"].(string),
-		Sub:   claims["sub"].(string),
-		Email: claims["email"].(string),
+		Sub:   sub,
+		Email: email,
 		Roles: rolesParsed,
 	}, nil
 }
