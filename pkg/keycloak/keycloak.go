@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"math/big"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -18,12 +20,15 @@ import (
 
 const (
 	BattAdminRole = "BattAdmin"
-	AdminClientId = "admin-cli"
+	AdminClientID = "admin-cli"
 )
 
 var (
-	ErrNoRS256Key       = errors.New("no RS256 key found on keycloak url")
-	ErrFailedToGetToken = errors.New("failed to get token")
+	ErrNoRS256Key             = errors.New("no RS256 key found on keycloak url")
+	ErrFailedToGetToken       = errors.New("failed to get token")
+	ErrFailedToGetPublicKey   = errors.New("failed to get public key from keycloak")
+	ErrFailedToParsePublicKey = errors.New("failed to parse public key from keycloak")
+	ErrInvalidClaims          = errors.New("invalid claims")
 )
 
 type Claims struct {
@@ -33,8 +38,8 @@ type Claims struct {
 	Roles []string `json:"roles"`
 }
 
-// KeycloakCertsResponse is the structure of the response from the Keycloak certs endpoint
-type KeycloakCertsResponse struct {
+// CertsResponse is the structure of the response from the Keycloak certs endpoint
+type CertsResponse struct {
 	Keys []struct {
 		Kid string `json:"kid"`
 		Kty string `json:"kty"`
@@ -45,7 +50,7 @@ type KeycloakCertsResponse struct {
 	} `json:"keys"`
 }
 
-type KeycloakValidator struct {
+type Validator struct {
 	pk  *rsa.PublicKey
 	cfg Config
 }
@@ -54,39 +59,51 @@ type Config struct {
 	PassUnauthenticated bool
 }
 
-func NewKeycloakValidator(url string, cfg Config) (res *KeycloakValidator, err error) {
-	pk, err := getRSAPublicKeyFromKeycloak(url)
+func NewKeycloakValidator(ctx context.Context, url string, cfg Config) (*Validator, error) {
+	pk, err := getRSAPublicKeyFromKeycloak(ctx, url)
 	if err != nil {
 		return nil, err
 	}
-	return &KeycloakValidator{
+	return &Validator{
 		pk:  pk,
 		cfg: cfg,
 	}, nil
 }
 
 // getRSAPublicKeyFromKeycloak fetches the RSA public key from Keycloak
-func getRSAPublicKeyFromKeycloak(url string) (*rsa.PublicKey, error) {
-	resp, err := http.Get(url)
+func getRSAPublicKeyFromKeycloak(ctx context.Context, kcURL string) (*rsa.PublicKey, error) {
+	parsedURL, err := url.Parse(kcURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid URL: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, parsedURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create GET request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrFailedToGetPublicKey, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("failed to get public key from keycloak")
+		return nil, ErrFailedToGetPublicKey
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrFailedToParsePublicKey, err)
 	}
 
-	var certs KeycloakCertsResponse
+	var certs CertsResponse
 	if err := json.Unmarshal(body, &certs); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrFailedToParsePublicKey, err)
 	}
+	return parseRSAPublicKey(certs)
+}
 
+func parseRSAPublicKey(certs CertsResponse) (*rsa.PublicKey, error) {
 	keyIndex := -1
 	for index, key := range certs.Keys {
 		if key.Alg == "RS256" {
@@ -101,11 +118,11 @@ func getRSAPublicKeyFromKeycloak(url string) (*rsa.PublicKey, error) {
 
 	nBytes, err := jwt.DecodeSegment(key.N)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrFailedToParsePublicKey, err)
 	}
 	eBytes, err := jwt.DecodeSegment(key.E)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrFailedToParsePublicKey, err)
 	}
 	e := new(big.Int).SetBytes(eBytes).Int64()
 
@@ -117,26 +134,44 @@ func getRSAPublicKeyFromKeycloak(url string) (*rsa.PublicKey, error) {
 	return publicKey, nil
 }
 
-func (kv *KeycloakValidator) validateToken(token *jwt.Token) (res interface{}, err error) {
+func (kv *Validator) validateToken(_ *jwt.Token) (interface{}, error) {
 	return kv.pk, nil
 }
 
-func (kv *KeycloakValidator) ParseToken(header string) (result *Claims, err error) {
+func (kv *Validator) ParseToken(header string) (*Claims, error) {
 	claims := jwt.MapClaims{}
-	_, err = jwt.ParseWithClaims(header, claims, kv.validateToken)
-	//extract the roles from realm_access
+	_, err := jwt.ParseWithClaims(header, claims, kv.validateToken)
+	// extract the roles from realm_access
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse claims: %w", err)
 	}
-	roles := claims["realm_access"].(map[string]interface{})["roles"].([]interface{})
+	claims, ok := claims["realm_access"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("%w: realm_access not found in claims", ErrInvalidClaims)
+	}
+	roles, ok := claims["roles"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("%w: roles not found in claims", ErrInvalidClaims)
+	}
 	rolesParsed := make([]string, len(roles))
 	for i, v := range roles {
-		rolesParsed[i] = v.(string)
+		parsedRole, ok := v.(string)
+		if !ok {
+			return nil, fmt.Errorf("%w: could not parse role", ErrInvalidClaims)
+		}
+		rolesParsed[i] = parsedRole
+	}
+	subClaim, ok := claims["sub"].(string)
+	if !ok {
+		return nil, fmt.Errorf("%w: could not parse sub claim", ErrInvalidClaims)
+	}
+	emailClaim, ok := claims["email"].(string)
+	if !ok {
+		return nil, fmt.Errorf("%w: could not parse email claim", ErrInvalidClaims)
 	}
 	return &Claims{
-		Name:  claims["name"].(string),
-		Sub:   claims["sub"].(string),
-		Email: claims["email"].(string),
+		Sub:   subClaim,
+		Email: emailClaim,
 		Roles: rolesParsed,
 	}, nil
 }
@@ -160,7 +195,7 @@ func GetSubAndEmail(r *http.Request) (sub, email string) { //nolint: nonamedretu
 	return
 }
 
-func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
+func (kv *Validator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		header = strings.TrimPrefix(header, "Bearer ")
@@ -170,7 +205,7 @@ func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 		}
 		claims, err := kv.ParseToken(header)
 		if err != nil {
-			fmt.Println("Error parsing jwt token", err)
+			log.Println("Error parsing jwt token", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -181,13 +216,13 @@ func (kv *KeycloakValidator) Middleware(next http.Handler) http.Handler {
 	})
 }
 
-func (kv *KeycloakValidator) AdminMiddleware(next http.Handler) http.Handler {
+func (kv *Validator) AdminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		header = strings.TrimPrefix(header, "Bearer ")
 		parsed, err := kv.ParseToken(header)
 		if err != nil || !contains(parsed.Roles, BattAdminRole) {
-			fmt.Println("Error parsing jwt token", err)
+			log.Println("Error parsing jwt token", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -211,11 +246,17 @@ type TokenProvider struct {
 	tokenExpiration time.Time
 }
 
-func NewTokenProvider(url, realm, username, password, client_id string) (res *TokenProvider, err error) {
-	return &TokenProvider{
-		url:  fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", url, realm),
-		data: fmt.Sprintf("username=%s&password=%s&grant_type=password&client_id=%s", username, password, client_id),
-	}, nil
+func NewTokenProvider(providerURL, realm, username, password, clientID string) (*TokenProvider, error) {
+	data := url.Values{}
+	data.Add("username", username)
+	data.Add("password", password)
+	data.Add("grant_type", "password")
+	data.Add("client_id", clientID)
+	tp := &TokenProvider{
+		url:  fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", providerURL, realm),
+		data: data.Encode(),
+	}
+	return tp, nil
 }
 
 // GetKeycloakToken fetches the token from Keycloak if the cached token is expired. Returns the cached token.
@@ -243,7 +284,7 @@ func (tp *TokenProvider) GetKeycloakToken(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("%w (%d): %s", ErrFailedToGetToken, resp.StatusCode, string(bodyBytes))
 	}
 
-	var tokenResponse KeycloakTokenResponse
+	var tokenResponse TokenResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
 		return "", fmt.Errorf("json decoding failed: %w", err)
 	}
@@ -251,16 +292,16 @@ func (tp *TokenProvider) GetKeycloakToken(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("jwt parsing failed: %w", err)
 	}
-	if claims, ok := token.Claims.(*jwt.StandardClaims); !ok {
+	claims, ok := token.Claims.(*jwt.StandardClaims)
+	if !ok {
 		return "", fmt.Errorf("jwt claims parsing failed: %w", err)
-	} else {
-		// ask for a new token a minute before the actual expiration
-		tp.tokenExpiration = time.Unix(claims.ExpiresAt, 0).Add(-time.Minute)
-		tp.token = tokenResponse.AccessToken
 	}
+	// ask for a new token a minute before the actual expiration
+	tp.tokenExpiration = time.Unix(claims.ExpiresAt, 0).Add(-time.Minute)
+	tp.token = tokenResponse.AccessToken
 	return tp.token, nil
 }
 
-type KeycloakTokenResponse struct {
+type TokenResponse struct {
 	AccessToken string `json:"access_token"` //nolint:tagliatelle
 }

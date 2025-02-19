@@ -1,0 +1,14 @@
+linters:
+  enable-all: true
+  disable:
+    - exportloopref
+    - wsl
+    - depguard
+    - gofumpt
+    - nlreturn
+    - godox
+    - godot
+    - exhaustruct
+    - varnamelen
+    - tagalign
+    - gci

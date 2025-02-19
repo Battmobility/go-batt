@@ -6,22 +6,22 @@ import (
 )
 
 const (
-	BATTERYSTATUS_NOT_CHARGING       = "NOT_CHARGING"
-	BATTERYSTATUS_NORMAL_CHARGE      = "NORMAL_CHARGE"
-	BATTERYSTATUS_QUICK_CHARGE       = "QUICK_CHARGE"
-	BATTERYSTATUS_UNKNOWN            = "UNKNOWN"
-	ISSUETYPE_POST_BOOKING           = "POST_BOOKING"
-	ISSUETYPE_PRE_BOOKING            = "PRE_BOOKING"
-	ISSUETYPE_FLEET                  = "FLEET"
-	ISSUEREASON_BATTERY              = "BATTERY"
-	ISSUEREASON_LOCATION             = "LOCATION"
-	ISSUEREASON_CLOSE_NAV            = "CLOSE_NAV"
-	ISSUEREASON_OVERDUE              = "OVERDUE"
-	ISSUESTATUS_CREATED              = "CREATED"
-	ISSUESTATUS_RESOLVED             = "RESOLVED"
-	TELEMATICSPROVIDER_FLESPI        = "FLESPI"
-	TELEMATICSPROVIDER_FLESPI_TWILIO = "FLESPI_TWILIO"
-	TELEMATICSPROVIDER_INVERS        = "INVERS"
+	BatteryStatusNotCharging       = "NOT_CHARGING"
+	BatteryStatusNormalCharge      = "NORMAL_CHARGE"
+	BatteryStatusQuickCharge       = "QUICK_CHARGE"
+	BatteryStatusUnknown           = "UNKNOWN"
+	IssueTypePostBooking           = "POST_BOOKING"
+	IssueTypePreBooking            = "PRE_BOOKING"
+	IssueTypeFleet                 = "FLEET"
+	IssueReasonBattery             = "BATTERY"
+	IssueReasonLocation            = "LOCATION"
+	IssueReasonCloseNav            = "CLOSE_NAV"
+	IssueReasonOverdue             = "OVERDUE"
+	IssueStatusCreated             = "CREATED"
+	IssueStatusResolved            = "RESOLVED"
+	TelematicsProviderFlespi       = "FLESPI"
+	TelematicsProviderFlespiTwilio = "FLESPI_TWILIO"
+	TelematicsProviderInvers       = "INVERS"
 )
 
 type Period struct {
@@ -35,7 +35,7 @@ type SearchVehicleRequest struct {
 }
 type FilterCriteria struct{}
 type SearchBookingRequest struct {
-	VehicleId       *string  `json:"vehicleId"`
+	VehicleID       *string  `json:"vehicleId"`
 	Period          Period   `json:"period"`
 	EndPeriod       *Period  `json:"endPeriod"`
 	Statuses        []string `json:"statuses"`
@@ -44,12 +44,12 @@ type SearchBookingRequest struct {
 }
 type SearchAvailabilityRequest struct {
 	Period     Period   `json:"period"`
-	VehicleIds []string `json:"vehicleIds"`
+	VehicleIDs []string `json:"vehicleIds"`
 }
 
 type CreateBookingRequest struct {
 	Period    Period `json:"period"`
-	VehicleId string `json:"vehicleId"`
+	VehicleID string `json:"vehicleId"`
 	Comments  string `json:"comments"`
 }
 
@@ -404,13 +404,13 @@ type NonAvailability struct {
 }
 
 type Token struct {
-	AccessToken      string `json:"access_token"`
-	ExpiresIn        int    `json:"expires_in"`
-	RefreshExpiresIn int    `json:"refresh_expires_in"`
-	RefreshToken     string `json:"refresh_token"`
-	TokenType        string `json:"token_type"`
-	NotBeforePolicy  int    `json:"not-before-policy"`
-	SessionState     string `json:"session_state"`
+	AccessToken      string `json:"access_token"`       //nolint:tagliatelle
+	ExpiresIn        int    `json:"expires_in"`         //nolint:tagliatelle
+	RefreshExpiresIn int    `json:"refresh_expires_in"` //nolint:tagliatelle
+	RefreshToken     string `json:"refresh_token"`      //nolint:tagliatelle
+	TokenType        string `json:"token_type"`         //nolint:tagliatelle
+	NotBeforePolicy  int    `json:"not-before-policy"`  //nolint:tagliatelle
+	SessionState     string `json:"session_state"`      //nolint:tagliatelle
 	Scope            string `json:"scope"`
 }
 
@@ -419,8 +419,9 @@ type BackOfficeUserResponse struct {
 }
 
 type SearchBackOfficeUsersRequest struct {
-	SofBattRemoteId string `json:"sofBattRemoteId"`
+	SofBattRemoteID string `json:"sofBattRemoteId"`
 }
+
 type BackOfficeUser struct {
 	CellPhone          string `json:"cellPhone"`
 	Created            string `json:"created"`
@@ -433,26 +434,27 @@ type BackOfficeUser struct {
 }
 
 type CreateIssueRequest struct {
-	VehicleId          string `json:"vehicleId"`
-	AssignedToRemoteId string `json:"assignedToRemoteId"`
+	VehicleID          string `json:"vehicleId"`
+	AssignedToRemoteID string `json:"assignedToRemoteId"`
 	Title              string `json:"title"`
 }
+
 type Issue struct {
 	Booking           *Booking         `json:"booking"`
 	Vehicle           *Vehicle         `json:"vehicle"`
 	Nav               *NonAvailability `json:"nav"`
-	PrevUser          *BackOfficeUser  `json:"prev_user"`
-	NextUser          *BackOfficeUser  `json:"next_user"`
-	BatteryStatus     *BatteryStatus   `json:"battery_status"`
+	PrevUser          *BackOfficeUser  `json:"prev_user"`      //nolint:tagliatelle
+	NextUser          *BackOfficeUser  `json:"next_user"`      //nolint:tagliatelle
+	BatteryStatus     *BatteryStatus   `json:"battery_status"` //nolint:tagliatelle
 	Location          *GpsLocation     `json:"location"`
-	BatteryError      string           `json:"battery_error"`
-	LocationError     string           `json:"location_error"`
+	BatteryError      string           `json:"battery_error"`  //nolint:tagliatelle
+	LocationError     string           `json:"location_error"` //nolint:tagliatelle
 	LastUpdated       string           `json:"lastUpdated"`
 	LastUpdatedParsed time.Time        `json:"-"`
 	Distance          float64          `json:"distance"`
 	Reason            string           `json:"reason"`
 	Status            string           `json:"status"`
-	IssueType         string           `json:"issue_type"`
+	IssueType         string           `json:"issue_type"` //nolint:tagliatelle
 }
 
 // parse last updated from issue
@@ -469,10 +471,10 @@ type IssueResponse struct {
 }
 
 type SearchIssueRequest struct {
-	VehicleId          string   `json:"vehicleId,omitempty"`
-	BookingId          string   `json:"bookingId,omitempty"`
-	UserRemoteId       string   `json:"userRemoteId,omitempty"`
-	AssignedToRemoteId string   `json:"assignedToRemoteId,omitempty"`
+	VehicleID          string   `json:"vehicleId,omitempty"`
+	BookingID          string   `json:"bookingId,omitempty"`
+	UserRemoteID       string   `json:"userRemoteId,omitempty"`
+	AssignedToRemoteID string   `json:"assignedToRemoteId,omitempty"`
 	Title              string   `json:"title,omitempty"`
 	Statuses           []string `json:"statuses,omitempty"`
 }
@@ -488,8 +490,8 @@ type VehicleGroup struct {
 
 type VehicleTelematics struct {
 	VehicleID        string `json:"vehicleId"`
-	ProviderDeviceId string `json:"providerDeviceId"`
-	ProviderId       string `json:"providerId"`
+	ProviderDeviceID string `json:"providerDeviceId"`
+	ProviderID       string `json:"providerId"`
 	PhoneNumber      string `json:"phoneNumber"`
 	MaxRange         int    `json:"maxRange"`
 }
@@ -556,5 +558,5 @@ type BackOfficeVehicle struct {
 	ID                       string  `json:"id"`
 	LicensePlate             string  `json:"licensePlate"`
 	LeasingMonthlyPriceExVat float64 `json:"leasingMonthlyPriceExVat"`
-	SofBattId                string  `json:"sofbattId"`
+	SofBattID                string  `json:"sofbattId"`
 }

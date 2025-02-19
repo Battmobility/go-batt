@@ -1,9 +1,11 @@
-package keycloak
+package keycloak_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/battmobility/go-batt/pkg/keycloak"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +19,7 @@ func TestKeycloakValidator(t *testing.T) {
 	if stagingHeader == "" {
 		t.Skip("skipping test; stagingHeader is empty")
 	}
-	kv, err := NewKeycloakValidator(stagingHost, Config{})
+	kv, err := keycloak.NewKeycloakValidator(context.TODO(), stagingHost, keycloak.Config{})
 	if err != nil {
 		t.Fatal(err)
 	}
