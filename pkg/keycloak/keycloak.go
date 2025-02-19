@@ -10,6 +10,7 @@ import (
 	"io"
 	"math/big"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -211,11 +212,17 @@ type TokenProvider struct {
 	tokenExpiration time.Time
 }
 
-func NewTokenProvider(url, realm, username, password, client_id string) (res *TokenProvider, err error) {
-	return &TokenProvider{
-		url:  fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", url, realm),
-		data: fmt.Sprintf("username=%s&password=%s&grant_type=password&client_id=%s", username, password, client_id),
-	}, nil
+func NewTokenProvider(providerURL, realm, username, password, client_id string) (res *TokenProvider, err error) {
+	data := url.Values{}
+	data.Add("username", username)
+	data.Add("password", password)
+	data.Add("grant_type", "password")
+	data.Add("client_id", client_id)
+	tp := &TokenProvider{
+		url:  fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", providerURL, realm),
+		data: data.Encode(),
+	}
+	return tp, nil
 }
 
 // GetKeycloakToken fetches the token from Keycloak if the cached token is expired. Returns the cached token.
