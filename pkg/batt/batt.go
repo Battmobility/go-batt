@@ -50,7 +50,7 @@ func NewBattClient(base, backoffice, auth, username, password string) *Client {
 	}
 }
 
-func (c *Client) refreshToken() error {
+func (c *Client) refreshToken(ctx context.Context) error {
 	data := url.Values{}
 	data.Set("client_id", "web")
 	data.Set("username", c.Username)
@@ -63,8 +63,6 @@ func (c *Client) refreshToken() error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return fmt.Errorf("failed to perform request: %w", err)
@@ -95,7 +93,9 @@ func (c *Client) SearchAvailabilities(start, end *time.Time, vehicleIDs []string
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrMarshalRequest, err)
 	}
-	resp, err := c.request(http.MethodPost, c.SofBattBaseURL, "availability/v1/availability-events", jsonData)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodPost, c.SofBattBaseURL, "availability/v1/availability-events", jsonData)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,9 @@ func (c *Client) SearchBookings(request SearchBookingRequest) (*SearchBookingRes
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrMarshalRequest, err)
 	}
-	resp, err := c.request(http.MethodPost, c.SofBattBaseURL, "booking/v1/bookings/searches", jsonData)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodPost, c.SofBattBaseURL, "booking/v1/bookings/searches", jsonData)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +145,9 @@ func (c *Client) SearchBookings(request SearchBookingRequest) (*SearchBookingRes
 }
 
 func (c *Client) GetBatteryStatus(id string) (*BatteryStatus, error) {
-	resp, err := c.request(http.MethodGet, c.SofBattBaseURL, "telematics/v1/batteryStatus/"+id, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodGet, c.SofBattBaseURL, "telematics/v1/batteryStatus/"+id, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +160,9 @@ func (c *Client) GetBatteryStatus(id string) (*BatteryStatus, error) {
 }
 
 func (c *Client) RefreshLocation(id string) (*GpsLocation, error) {
-	resp, err := c.request(http.MethodPost, c.SofBattBaseURL, "telematics/v1/location/"+id, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodPost, c.SofBattBaseURL, "telematics/v1/location/"+id, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +179,9 @@ func (c *Client) SearchVehicles(req *SearchVehicleRequest) (*SearchVehicleRespon
 	if err != nil {
 		return nil, fmt.Errorf("%w, %w", ErrMarshalRequest, err)
 	}
-	resp, err := c.request(http.MethodPost, c.SofBattBaseURL, "booking/v1/vehicles/searches", jsonData)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodPost, c.SofBattBaseURL, "booking/v1/vehicles/searches", jsonData)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +194,9 @@ func (c *Client) SearchVehicles(req *SearchVehicleRequest) (*SearchVehicleRespon
 }
 
 func (c *Client) GetVehicle(vehicleID string) (*Vehicle, error) {
-	resp, err := c.request(http.MethodGet, c.SofBattBaseURL, "booking/v1/vehicles/"+vehicleID, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodGet, c.SofBattBaseURL, "booking/v1/vehicles/"+vehicleID, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +209,9 @@ func (c *Client) GetVehicle(vehicleID string) (*Vehicle, error) {
 }
 
 func (c *Client) GetVehicleGroups(organizationID string) (*VehicleGroupsPage, error) {
-	resp, err := c.request(http.MethodGet, c.SofBattBaseURL,
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodGet, c.SofBattBaseURL,
 		"vehicle-group/v1/vehicle-groups?organizationId="+organizationID, nil)
 	if err != nil {
 		return nil, err
@@ -213,7 +225,9 @@ func (c *Client) GetVehicleGroups(organizationID string) (*VehicleGroupsPage, er
 }
 
 func (c *Client) GetVehicleGroup(id string) (*VehicleGroup, error) {
-	resp, err := c.request(http.MethodGet, c.SofBattBaseURL, "vehicle-group/v1/vehicle-groups/"+id, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodGet, c.SofBattBaseURL, "vehicle-group/v1/vehicle-groups/"+id, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +244,9 @@ func (c *Client) CreateIssue(req CreateIssueRequest) (*Issue, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrMarshalRequest, err)
 	}
-	resp, err := c.request(http.MethodPost, c.SofBattBaseURL, "issue/v1/issues", jsonData)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodPost, c.SofBattBaseURL, "issue/v1/issues", jsonData)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +259,9 @@ func (c *Client) CreateIssue(req CreateIssueRequest) (*Issue, error) {
 }
 
 func (c *Client) GetVehicleTelematics(id string) (*VehicleTelematics, error) {
-	resp, err := c.request(http.MethodGet, c.SofBattBaseURL, "telematics/v1/devices/"+id, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodGet, c.SofBattBaseURL, "telematics/v1/devices/"+id, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +278,9 @@ func (c *Client) SearchIssues(req SearchIssueRequest) (*IssueResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrMarshalRequest, err)
 	}
-	resp, err := c.request(http.MethodPost, c.SofBattBaseURL, "issue/v1/issues/searches", jsonData)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodPost, c.SofBattBaseURL, "issue/v1/issues/searches", jsonData)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +296,9 @@ func (c *Client) UpdateBooking(req UpdateBookingRequest, id string) (*Booking, e
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrMarshalRequest, err)
 	}
-	resp, err := c.request(http.MethodPut, c.SofBattBaseURL, "booking/v1/bookings/"+id, jsonData)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodPut, c.SofBattBaseURL, "booking/v1/bookings/"+id, jsonData)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +318,9 @@ func (c *Client) SearchBackOfficeUser(remoteID string) (*BackOfficeUser, error) 
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrMarshalRequest, err)
 	}
-	resp, err := c.request(http.MethodPost, c.BackOfficeHost, "/v1/users/search", jsonData)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodPost, c.BackOfficeHost, "/v1/users/search", jsonData)
 	if err != nil {
 		return nil, err
 	}
@@ -311,9 +335,9 @@ func (c *Client) SearchBackOfficeUser(remoteID string) (*BackOfficeUser, error) 
 	return &result.Users[0], nil
 }
 
-func (c *Client) request(method, host, endpoint string, jsonData []byte) (io.ReadCloser, error) {
+func (c *Client) request(ctx context.Context, method, host, endpoint string, jsonData []byte) (io.ReadCloser, error) {
 	if c.Token == nil {
-		err := c.refreshToken()
+		err := c.refreshToken(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -325,9 +349,7 @@ func (c *Client) request(method, host, endpoint string, jsonData []byte) (io.Rea
 	}
 	req.Header.Set("Authorization", "Bearer "+*c.Token)
 	req.Header.Set("Content-Type", "application/json")
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-	resp, err := http.DefaultClient.Do(req.WithContext(ctx)) //nolint:bodyclose
+	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}

@@ -1,6 +1,7 @@
 package batt
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,7 +13,9 @@ func (c *Client) CreateVehicleBaseLocation(request VehicleBaseLocation) (*Vehicl
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrMarshalRequest, err)
 	}
-	resp, err := c.request(http.MethodPost, c.SofBattBaseURL, "vehicle/v1/vehiclebaselocations", reqBytes)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodPost, c.SofBattBaseURL, "vehicle/v1/vehiclebaselocations", reqBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +32,9 @@ func (c *Client) UpdateVehicleLocation(request UpdateVehicleRequest) (*Vehicle, 
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrMarshalRequest, err)
 	}
-	resp, err := c.request(http.MethodPut, c.SofBattBaseURL,
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	resp, err := c.request(ctx, http.MethodPut, c.SofBattBaseURL,
 		"booking/v1/vehicles/"+request.VehicleID, reqBytes)
 	if err != nil {
 		return nil, err
