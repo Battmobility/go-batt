@@ -15,13 +15,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	stagingAuthURL = "https://keycloak-staging.battmobility.be/realms/Battmobiel/protocol/openid-connect/token"
+	prodAuthURL    = "https://api.battmobility.com/auth/realms/Battmobiel/protocol/openid-connect/token"
+)
+
 func TestSearchVehicles(t *testing.T) {
 	t.Parallel()
 	if os.Getenv("BATT_PASSWORD") == "" {
 		t.Skip("skipping test; BATT_PASSWORD is empty")
 	}
 	battClient := batt.NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "",
-		"https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
+		prodAuthURL, "batt", os.Getenv("BATT_PASSWORD"))
 	veh, err := battClient.SearchVehicles(&batt.SearchVehicleRequest{})
 	require.NoError(t, err)
 	t.Log(veh.Vehicles)
@@ -32,8 +37,11 @@ func TestCreateVBL(t *testing.T) {
 	if os.Getenv("BATT_PASSWORD") == "" {
 		t.Skip("skipping test; BATT_PASSWORD is empty")
 	}
-	bc := batt.NewBattClient("https://booking-staging.battmobility.be/web-api/", "",
-		"https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
+	bc := batt.NewBattClient(
+		"https://booking-staging.battmobility.be/web-api/",
+		"",
+		stagingAuthURL,
+		"batt", os.Getenv("BATT_PASSWORD"))
 	vbl, err := bc.CreateVehicleBaseLocation(batt.VehicleBaseLocation{
 		Name: "hoi",
 		HomePosition: batt.GpsLocation{
@@ -57,7 +65,7 @@ func TestAddVBLToVehicle(t *testing.T) {
 		t.Skip("skipping test; BATT_PASSWORD is empty")
 	}
 	bc := batt.NewBattClient("https://booking-staging.battmobility.be/web-api/", "",
-		"https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
+		stagingAuthURL, "batt", os.Getenv("BATT_PASSWORD"))
 	veh, err := bc.UpdateVehicleLocation(batt.UpdateVehicleRequest{
 		VehicleID: "1THX384",
 		AddVehicleLocationRequest: batt.AddVehicleLocationRequest{
@@ -75,7 +83,7 @@ func TestGetVehicleGroup(t *testing.T) {
 		t.Skip("skipping test; BATT_PASSWORD is empty")
 	}
 	bc := batt.NewBattClient("https://booking-staging.battmobility.be/web-api/", "",
-		"https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
+		stagingAuthURL, "batt", os.Getenv("BATT_PASSWORD"))
 	vg, err := bc.GetVehicleGroup("batt-all")
 	require.NoError(t, err)
 	fmt.Println(vg) //nolint:forbidigo
@@ -87,7 +95,7 @@ func TestCreateIssue(t *testing.T) {
 		t.Skip("skipping test; BATT_PASSWORD is empty")
 	}
 	bc := batt.NewBattClient("https://booking-staging.battmobility.be/web-api/", "",
-		"https://keycloak-staging.battmobility.be", "batt", os.Getenv("BATT_PASSWORD"))
+		stagingAuthURL, "batt", os.Getenv("BATT_PASSWORD"))
 	issue, err := bc.CreateIssue(batt.CreateIssueRequest{
 		Title:     "hoi",
 		VehicleID: "2ATZ899",
@@ -104,7 +112,7 @@ func TestSearchIssue(t *testing.T) {
 	// create client
 	// search for issues from a certain vehicle with a title and statuses CREATED, RESOLVED
 	bc := batt.NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "",
-		"https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
+		prodAuthURL, "batt", os.Getenv("BATT_PASSWORD"))
 	issues, err := bc.SearchIssues(batt.SearchIssueRequest{
 		VehicleID: "2ATZ899",
 		Title:     "carwash",
@@ -196,7 +204,7 @@ func TestSearchBookings(t *testing.T) {
 		t.Skip("skipping test; BATT_PASSWORD is empty")
 	}
 	bc := batt.NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "",
-		"https://api.battmobility.com", "batt", os.Getenv("BATT_PASSWORD"))
+		prodAuthURL, "batt", os.Getenv("BATT_PASSWORD"))
 	start := time.Now()
 	end := time.Now().Add(24 * time.Hour)
 	_, err := bc.SearchBookings(batt.SearchBookingRequest{

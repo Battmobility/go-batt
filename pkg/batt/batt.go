@@ -23,7 +23,7 @@ const (
 
 type Client struct {
 	SofBattBaseURL string
-	AuthBaseURL    string
+	AuthURL        string
 	BackOfficeHost string
 	APIEndpoint    string
 	Token          *string
@@ -44,7 +44,7 @@ func NewBattClient(base, backoffice, auth, username, password string) *Client {
 	return &Client{
 		SofBattBaseURL: base,
 		BackOfficeHost: backoffice,
-		AuthBaseURL:    auth,
+		AuthURL:        auth,
 		Username:       username,
 		Password:       password,
 	}
@@ -57,9 +57,7 @@ func (c *Client) refreshToken() error {
 	data.Set("password", c.Password)
 	data.Set("grant_type", "password")
 
-	endpoint := "/auth/realms/Battmobiel/protocol/openid-connect/token"
-	url := fmt.Sprintf("%s%s", c.AuthBaseURL, endpoint)
-	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data.Encode()))
+	req, err := http.NewRequest(http.MethodPost, c.AuthURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
@@ -70,6 +68,10 @@ func (c *Client) refreshToken() error {
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return fmt.Errorf("failed to perform request: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("%w: %s", ErrBadResponse, string(body))
 	}
 	defer resp.Body.Close()
 	token := &Token{}
