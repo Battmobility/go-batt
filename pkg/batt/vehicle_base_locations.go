@@ -7,36 +7,37 @@ import (
 	"time"
 )
 
-func (c *BattClient) CreateVehicleBaseLocation(request VehicleBaseLocation) (result *VehicleBaseLocation, err error) {
+func (c *Client) CreateVehicleBaseLocation(request VehicleBaseLocation) (*VehicleBaseLocation, error) {
 	reqBytes, err := json.Marshal(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrMarshalRequest, err)
 	}
-	resp, err := c.request(http.MethodPost, c.SofBattBaseUrl, "vehicle/v1/vehiclebaselocations", reqBytes)
+	resp, err := c.request(http.MethodPost, c.SofBattBaseURL, "vehicle/v1/vehiclebaselocations", reqBytes)
 	if err != nil {
 		return nil, err
 	}
-	result = &VehicleBaseLocation{}
+	result := &VehicleBaseLocation{}
 	err = json.NewDecoder(resp).Decode(result)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrDecodeResponse, err)
 	}
 	return result, nil
 }
 
-func (c *BattClient) UpdateVehicleLocation(request UpdateVehicleRequest) (result *Vehicle, err error) {
+func (c *Client) UpdateVehicleLocation(request UpdateVehicleRequest) (*Vehicle, error) {
 	reqBytes, err := json.Marshal(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrMarshalRequest, err)
 	}
-	resp, err := c.request(http.MethodPut, c.SofBattBaseUrl, fmt.Sprintf("booking/v1/vehicles/%s", request.VehicleId), reqBytes)
+	resp, err := c.request(http.MethodPut, c.SofBattBaseURL,
+		"booking/v1/vehicles/"+request.VehicleID, reqBytes)
 	if err != nil {
 		return nil, err
 	}
-	result = &Vehicle{}
+	result := &Vehicle{}
 	err = json.NewDecoder(resp).Decode(result)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrDecodeResponse, err)
 	}
 	return result, nil
 }
@@ -52,7 +53,7 @@ type VehicleBaseLocation struct {
 }
 
 type UpdateVehicleRequest struct {
-	VehicleId                 string                    `json:"id,omitempty"`
+	VehicleID                 string                    `json:"id,omitempty"`
 	AddVehicleLocationRequest AddVehicleLocationRequest `json:"addVehicleLocationRequest"`
 }
 
