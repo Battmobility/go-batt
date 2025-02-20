@@ -145,11 +145,11 @@ func (kv *Validator) ParseToken(header string) (*Claims, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse claims: %w", err)
 	}
-	claims, ok := claims["realm_access"].(map[string]interface{})
+	realmClaims, ok := claims["realm_access"].(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("%w: realm_access not found in claims", ErrInvalidClaims)
 	}
-	roles, ok := claims["roles"].([]interface{})
+	roles, ok := realmClaims["roles"].([]interface{})
 	if !ok {
 		return nil, fmt.Errorf("%w: roles not found in claims", ErrInvalidClaims)
 	}
@@ -168,6 +168,11 @@ func (kv *Validator) ParseToken(header string) (*Claims, error) {
 	emailClaim, ok := claims["email"].(string)
 	if !ok {
 		return nil, fmt.Errorf("%w: could not parse email claim", ErrInvalidClaims)
+	}
+	emailVerified, ok := claims["email_verified"].(bool)
+	if !ok || !emailVerified {
+		// if keycloak is configured correctly, this should never happen
+		return nil, fmt.Errorf("%w: email not verified", ErrInvalidClaims)
 	}
 	return &Claims{
 		Sub:   subClaim,
