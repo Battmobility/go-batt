@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -251,6 +252,7 @@ type TokenProvider struct {
 	data            string
 	token           string
 	tokenExpiration time.Time
+	mu              sync.RWMutex
 }
 
 func NewTokenProvider(providerURL, realm, username, password, clientID string) (*TokenProvider, error) {
@@ -267,8 +269,17 @@ func NewTokenProvider(providerURL, realm, username, password, clientID string) (
 }
 
 // GetKeycloakToken fetches the token from Keycloak if the cached token is expired. Returns the cached token.
-// Not thread-safe.
 func (tp *TokenProvider) GetKeycloakToken(ctx context.Context) (string, error) {
+	tp.mu.RLock()
+	cachedToken := tp.token
+	cachedExpiration := tp.tokenExpiration
+	tp.mu.RUnlock()
+	if time.Now().Before(cachedExpiration) {
+		return cachedToken, nil
+	}
+	// slow path
+	tp.mu.Lock()
+	defer tp.mu.Unlock()
 	if time.Now().Before(tp.tokenExpiration) {
 		return tp.token, nil
 	}
