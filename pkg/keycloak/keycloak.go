@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rsa"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,12 +16,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 const (
 	BattAdminRole = "BattAdmin"
 	AdminClientID = "admin-cli"
+	leewaySeconds = 10
 )
 
 var (
@@ -116,11 +118,11 @@ func parseRSAPublicKey(certs CertsResponse) (*rsa.PublicKey, error) {
 	}
 	key := certs.Keys[keyIndex]
 
-	nBytes, err := jwt.DecodeSegment(key.N)
+	nBytes, err := base64.RawURLEncoding.DecodeString(key.N)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrFailedToParsePublicKey, err)
 	}
-	eBytes, err := jwt.DecodeSegment(key.E)
+	eBytes, err := base64.RawURLEncoding.DecodeString(key.E)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrFailedToParsePublicKey, err)
 	}
@@ -140,7 +142,7 @@ func (kv *Validator) validateToken(_ *jwt.Token) (interface{}, error) {
 
 func (kv *Validator) ParseToken(header string) (*Claims, error) {
 	claims := jwt.MapClaims{}
-	_, err := jwt.ParseWithClaims(header, claims, kv.validateToken)
+	_, err := jwt.ParseWithClaims(header, claims, kv.validateToken, jwt.WithLeeway(leewaySeconds*time.Second))
 	// extract the roles from realm_access
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse claims: %w", err)
@@ -293,16 +295,16 @@ func (tp *TokenProvider) GetKeycloakToken(ctx context.Context) (string, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
 		return "", fmt.Errorf("json decoding failed: %w", err)
 	}
-	token, _, err := new(jwt.Parser).ParseUnverified(tokenResponse.AccessToken, &jwt.StandardClaims{})
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenResponse.AccessToken, &jwt.RegisteredClaims{})
 	if err != nil {
 		return "", fmt.Errorf("jwt parsing failed: %w", err)
 	}
-	claims, ok := token.Claims.(*jwt.StandardClaims)
+	claims, ok := token.Claims.(*jwt.RegisteredClaims)
 	if !ok {
 		return "", fmt.Errorf("jwt claims parsing failed: %w", err)
 	}
 	// ask for a new token a minute before the actual expiration
-	tp.tokenExpiration = time.Unix(claims.ExpiresAt, 0).Add(-time.Minute)
+	tp.tokenExpiration = claims.ExpiresAt.Add(-time.Minute)
 	tp.token = tokenResponse.AccessToken
 	return tp.token, nil
 }
