@@ -38,7 +38,7 @@ var (
 	ErrDecodeResponse = errors.New("failed to decode response")
 )
 
-const layout = "2006-01-02T15:04:05-07:00[Europe/Brussels]"
+const layout = "2006-01-02T15:04:05Z[UTC]"
 
 func NewBattClient(base, backoffice, auth, username, password string) *Client {
 	return &Client{
