@@ -203,7 +203,7 @@ func TestSearchBookings(t *testing.T) {
 	if os.Getenv("BATT_PASSWORD") == "" {
 		t.Skip("skipping test; BATT_PASSWORD is empty")
 	}
-	bc := batt.NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "",
+	bc := batt.NewBattClient("https://bff.battmobility.be/web-api/", "",
 		prodAuthURL, "batt", os.Getenv("BATT_PASSWORD"))
 	start := time.Now()
 	end := time.Now().Add(24 * time.Hour)
