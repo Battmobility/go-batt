@@ -38,6 +38,7 @@ type SearchVehicleRequest struct {
 type FilterCriteria struct{}
 type SearchBookingRequest struct {
 	VehicleID       *string  `json:"vehicleId"`
+	ClientID        *string  `json:"clientId"`
 	Period          Period   `json:"period"`
 	EndPeriod       *Period  `json:"endPeriod"`
 	Statuses        []string `json:"statuses"`
