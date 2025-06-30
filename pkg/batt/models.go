@@ -354,8 +354,8 @@ type NonAvailability struct {
 	Period    struct {
 		Start       string    `json:"start"`
 		End         string    `json:"end"`
-		ParsedStart time.Time `json:"-"`
-		ParsedEnd   time.Time `json:"-"`
+		ParsedStart time.Time `json:"parsedStart"`
+		ParsedEnd   time.Time `json:"parsedEnd"`
 		TimeZone    string    `json:"timeZone"`
 	} `json:"period"`
 	Booking struct {
