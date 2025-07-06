@@ -563,3 +563,9 @@ type BackOfficeVehicle struct {
 	LeasingMonthlyPriceExVat float64 `json:"leasingMonthlyPriceExVat"`
 	SofBattID                string  `json:"sofbattId"`
 }
+
+type BackOfficeClient struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
