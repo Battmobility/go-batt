@@ -564,9 +564,9 @@ type BackOfficeVehicle struct {
 	SofBattID                string  `json:"sofbattId"`
 }
 
-type BackOfficeClientOnboarding struct {
-	ID        int     `json:"id"`
-	Name      string  `json:"name"`
-	Email     string  `json:"email"`
-	UserEmail *string `json:"userEmail"`
+type BackOfficeClient struct {
+	ID           int     `json:"id"`
+	Name         string  `json:"name"`
+	Email        string  `json:"email"`
+	SlackMessage *string `json:"slackMessage"`
 }
