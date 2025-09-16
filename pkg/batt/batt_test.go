@@ -111,15 +111,18 @@ func TestSearchIssue(t *testing.T) {
 	}
 	// create client
 	// search for issues from a certain vehicle with a title and statuses CREATED, RESOLVED
-	bc := batt.NewBattClient("https://api.battmobility.com/api/web-bff-service/v1/", "",
+	bc := batt.NewBattClient("https://bff.battmobility.be/web-api/", "",
 		prodAuthURL, "batt", os.Getenv("BATT_PASSWORD"))
 	issues, err := bc.SearchIssues(batt.SearchIssueRequest{
-		VehicleID: "2ATZ899",
+		VehicleID: "2FUZ644",
 		Title:     "carwash",
 		Statuses:  []string{"CREATED", "RESOLVED"},
 	})
 	require.NoError(t, err)
-	fmt.Println(issues) //nolint:forbidigo
+	for _, issue := range issues.Issues {
+		issue.ParseLastUpdated()
+		fmt.Println(issue.LastUpdatedParsed) //nolint:forbidigo
+	}
 }
 
 func TestGetNeedsCorrectionBookings(t *testing.T) { //nolint:funlen

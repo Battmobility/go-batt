@@ -462,7 +462,7 @@ type Issue struct {
 
 // parse last updated from issue
 func (i *Issue) ParseLastUpdated() {
-	parsed, err := time.Parse(time.RFC3339, strings.TrimSuffix(i.LastUpdated, "[Etc/UTC]"))
+	parsed, err := time.Parse(time.RFC3339, strings.TrimSuffix(i.LastUpdated, "[UTC]"))
 	if err != nil {
 		return
 	}
