@@ -1,6 +1,7 @@
 package batt
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -461,12 +462,13 @@ type Issue struct {
 }
 
 // parse last updated from issue
-func (i *Issue) ParseLastUpdated() {
+func (i *Issue) ParseLastUpdated() error {
 	parsed, err := time.Parse(time.RFC3339, strings.TrimSuffix(i.LastUpdated, "[UTC]"))
 	if err != nil {
-		return
+		return fmt.Errorf("parsing last updated: %w", err)
 	}
 	i.LastUpdatedParsed = parsed
+	return nil
 }
 
 type IssueResponse struct {

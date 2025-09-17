@@ -120,7 +120,8 @@ func TestSearchIssue(t *testing.T) {
 	})
 	require.NoError(t, err)
 	for _, issue := range issues.Issues {
-		issue.ParseLastUpdated()
+		err = issue.ParseLastUpdated()
+		require.NoError(t, err)
 		fmt.Println(issue.LastUpdatedParsed) //nolint:forbidigo
 	}
 }
